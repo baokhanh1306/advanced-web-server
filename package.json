@@ -1,0 +1,36 @@
+{
+  "name": "advanced-web-server",
+  "version": "1.0.0",
+  "description": "Final Project - Server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baokhanh1306/advanced-web-server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/baokhanh1306/advanced-web-server/issues"
+  },
+  "homepage": "https://github.com/baokhanh1306/advanced-web-server#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "chalk": "^4.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.11.4",
+    "morgan": "^1.10.0",
+    "rimraf": "^3.0.2",
+    "socket.io": "^3.0.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  }
+}
