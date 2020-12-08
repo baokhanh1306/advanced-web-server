@@ -20,6 +20,7 @@ exports.auth = catchAsync(async (req, res, next) => {
   next();
 });
 
+
 exports.isAdmin = catchAsync(async (req, res, next) => {
   const { role } = req.user;
   if (!role) {
