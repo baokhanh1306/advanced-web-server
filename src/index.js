@@ -1,5 +1,5 @@
 const express = require('express');
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'prod') require('dotenv').config();
 const morgan = require('morgan');
 const cors = require('cors');
 const chalk = require('chalk');
@@ -33,7 +33,11 @@ app.use((err, req, res, next) => {
 });
 
 const server = http.createServer(app);
-const io = socketIO(server);
+const io = socketIO(server, {
+  cors: {
+    origin: process.env.CLIENT_URL,
+  }
+});
 io.on('connection', websocket.connection);
 
 const PORT = process.env.PORT || 4000;
@@ -42,7 +46,7 @@ server.listen(PORT, () =>
     chalk.yellow(`
 ${process.env.NODE_ENV} server
 
-⚡️ ==> Visit server at http://localhost:${PORT}
+⚡️ ==> Visit server at ${process.env.HOST_URL}
 ⚡️ ==> Server is running on port ${PORT}
 `)
   )

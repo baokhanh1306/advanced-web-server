@@ -1,18 +1,24 @@
 class WebSockets {
-    users = [];
-    connection(client) {
-        client.on('disconnect', () => {
-            this.users = this.users.filter((user) => user.socketId !== client.id);
-        });
-        client.on('identity', (userId,username) => {
-            this.users.push({
-                socketId: client.id,
-                userId,
-                username
-            });
-            client.emit('updateUsers', users);
-        });
-    }
+  // users = []
+  // constructor() {
+  //   this.users = [];
+  // }
+  connection(client) {
+    let users = [];
+    console.log('New user connected');
+    client.on('disconnect', () => {
+      users = users.filter((user) => user.socketId !== client.id);
+      console.log('User disconected');
+    });
+    client.on('identity', ({ id: userId, username }) => {
+      users.push({
+        socketId: client.id,
+        userId,
+        username
+      });
+      client.emit('updateUsers', users);
+    });
+  }
 };
 
 module.exports = new WebSockets();
