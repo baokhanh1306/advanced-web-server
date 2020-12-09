@@ -15,7 +15,7 @@ exports.auth = catchAsync(async (req, res, next) => {
   if (!user) {
     throw new ErrorHandler(401, 'Not authorized to access');
   }
-  req.user = { id: user._id, email: user.email, role: user.role, token };
+  req.user = { id: user._id, username: user.username, email: user.email, role: user.role, token };
   req.token = token;
   next();
 });

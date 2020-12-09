@@ -1,12 +1,17 @@
 const express = require('express');
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'prod') require('dotenv').config();
 const morgan = require('morgan');
 const cors = require('cors');
 const chalk = require('chalk');
+const http = require('http');
+const socketIO = require('socket.io');
+
 const db = require('./services/db');
 const { handleError } = require('./middlewares/ErrorHandler');
+const websocket = require('./utils/websocket');
 
 const app = express();
+
 db(process.env.DB_URI);
 
 if (process.env.NODE_ENV === 'production') {
@@ -14,7 +19,9 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.use(morgan('dev'));
-app.use(cors());
+app.use(cors({
+  origin: '*'
+}));
 app.use(express.json());
 
 app.get('/', (_req, res) => {
@@ -24,16 +31,24 @@ app.get('/', (_req, res) => {
 app.use('/api', require('./route'));
 
 app.use((err, req, res, next) => {
-	handleError(err, res);
+  handleError(err, res);
 });
 
+const server = http.createServer(app);
+const io = socketIO(server, {
+  cors: {
+    origin: process.env.CLIENT_URL,
+  }
+});
+io.on('connection', websocket.connection);
+
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () =>
+server.listen(PORT, () =>
   console.log(
     chalk.yellow(`
 ${process.env.NODE_ENV} server
 
-⚡️ ==> Visit server at http://localhost:${PORT}
+⚡️ ==> Visit server at ${process.env.HOST_URL}
 ⚡️ ==> Server is running on port ${PORT}
 `)
   )
