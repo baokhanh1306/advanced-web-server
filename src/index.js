@@ -37,7 +37,7 @@ app.use((err, req, res, next) => {
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: *,
+    origin: '*',
   }
 });
 io.on('connection', websocket.connection);
