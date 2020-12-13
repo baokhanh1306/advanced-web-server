@@ -15,22 +15,28 @@ module.exports = function(io, socket) {
       userId,
       username
     });
-    socket.emit('updateUsers', users);
+    socket.user = userId;
+    socket.username = username;
+    io.emit('updateUsers', users);
   });
-  socket.on('create-board', async ({ id: userId, name }) => {
+  socket.on('create-board', async ({ name }) => {
     const board = new Board({
       name,
-      playerX: id
+      playerX: socket.user
     });
     await board.save();
     boards.push(board);
     socket.board = board._id;
     socket.join(socket.board);
   });
-  socket.on('join-board', async ({ id: userId, boardId }) => {
+  socket.on('join-board', async ({ boardId }) => {
     const board = await Board.findById(boardId, { winner: 0 } );
     if (board) {
+      socket.board = boardId;
       socket.join(boardId);
     }
+  });
+  socket.on('send-message', ({ msg }) => {
+    io.to(socket.board).emit('message', { user: socket.username, text: msg });
   });
 };

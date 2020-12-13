@@ -4,7 +4,8 @@ const Board = require('./board.model');
 
 
 exports.saveBoard = catchAsync(async (req,res,next) => {
-    const { _id, playerO, winner, history } = req.body;
+    const playerO = req.user.id;
+    const { _id, winner, history } = req.body;
     const board = await Board.findByIdAndUpdate(_id, { playerO, winner, history });
     if (!board) {
         throw new ErrorHandler(400, 'Board not found');
