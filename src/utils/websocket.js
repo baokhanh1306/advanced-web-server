@@ -1,7 +1,7 @@
 const Board = require('../board/board.model');
 const ErrorHandler = require('../middlewares/ErrorHandler');
-const boards = [];
-const users = [];
+let boards = [];
+let users = [];
 
 module.exports = function(io, socket) {
   console.log('Socket connected ...');
