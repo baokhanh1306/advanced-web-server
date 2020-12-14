@@ -8,7 +8,6 @@ const socketIO = require('socket.io');
 
 const db = require('./services/db');
 const { handleError } = require('./middlewares/ErrorHandler');
-const websocket = require('./utils/websocket');
 
 const app = express();
 
@@ -40,7 +39,7 @@ const io = socketIO(server, {
     origin: '*',
   }
 });
-io.on('connection', websocket.connection);
+io.on('connection', (socket) => require('./utils/websocket')(io,socket));
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () =>
