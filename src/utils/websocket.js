@@ -8,10 +8,10 @@ class WebSockets {
     console.log('New user connected');
     client.on('disconnect', () => {
       users = [...users.filter((user) => user.socketId !== client.id)];
-      client.emit('updateUsers', []);
-      console.log('User disconected', users);
+      client.emit('updateUsers', users);
     });
     client.on('identity', ({ id: userId, username }) => {
+      console.log('vo')
       users.push({
         socketId: client.id,
         userId,
