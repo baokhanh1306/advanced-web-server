@@ -33,12 +33,12 @@ module.exports = function (io, socket) {
   socket.on('join-board', async ({ boardId }) => {
     const board = await Board.findById(boardId, { winner: 0 });
     if (board) {
+      socket.emit('user-join-chat', `${socket.username} has join the chat`)
       socket.board = boardId;
       socket.join(boardId);
     }
   });
-  socket.on('send-message', ({ msg }) => {
-    console.log(msg);
-    io.to(socket.board).emit('message', { user: socket.username, text: msg });
+  socket.on('send-message', ({ username, msg }) => {
+    io.to(socket.board).emit('message', { user: username, text: msg, createdAt: Date.now() });
   });
 };
