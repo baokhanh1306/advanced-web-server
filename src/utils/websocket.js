@@ -4,7 +4,7 @@ let boards = [];
 let users = [];
 
 module.exports = function (io, socket) {
-  console.log('Socket connected ...');
+  console.log('New user connected');
   socket.on('disconnect', () => {
     users = users.filter((user) => user.socketId !== socket.id);
     console.log('Socket disconnected ...');
@@ -38,6 +38,7 @@ module.exports = function (io, socket) {
     }
   });
   socket.on('send-message', ({ msg }) => {
+    console.log(msg);
     io.to(socket.board).emit('message', { user: socket.username, text: msg });
   });
 };
