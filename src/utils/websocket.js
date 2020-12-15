@@ -2,8 +2,8 @@ const { v4: uuidv4 } = require('uuid');
 let boards = [];
 let users = [];
 
-module.exports = function(io, socket) {
-  console.log('Socket connected ...');
+module.exports = function (io, socket) {
+  console.log('New user connected');
   socket.on('disconnect', () => {
     users = users.filter((user) => user.socketId !== socket.id);
     io.emit('updateUsers', users);
@@ -32,16 +32,9 @@ module.exports = function(io, socket) {
   socket.on('join-board', async (id) => {
     socket.board = id;
     socket.join(id);
-    const ids = await io.of("/").in(socket.board).allSockets();
-    console.log(ids);
-    console.log(socket.board);
   });
-  socket.on('send-message', async (msg) => {
+  socket.on('send-message', ({ msg }) => {
     console.log(msg);
-    console.log(socket.username);
-    const ids = await io.of("/").in(socket.board).allSockets();
-    console.log(ids);
-    console.log(socket.board);
     io.to(socket.board).emit('message', { user: socket.username, text: msg });
   });
 };
