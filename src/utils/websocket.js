@@ -3,8 +3,8 @@ const ErrorHandler = require('../middlewares/ErrorHandler');
 let boards = [];
 let users = [];
 
-module.exports = function(io, socket) {
-  console.log('Socket connected ...');
+module.exports = function (io, socket) {
+  console.log('New user connected');
   socket.on('disconnect', () => {
     users = users.filter((user) => user.socketId !== socket.id);
     io.emit('updateUsers', users);
@@ -30,13 +30,14 @@ module.exports = function(io, socket) {
     socket.join(socket.board);
   });
   socket.on('join-board', async ({ boardId }) => {
-    const board = await Board.findById(boardId, { winner: 0 } );
+    const board = await Board.findById(boardId, { winner: 0 });
     if (board) {
       socket.board = boardId;
       socket.join(boardId);
     }
   });
   socket.on('send-message', ({ msg }) => {
+    console.log(msg);
     io.to(socket.board).emit('message', { user: socket.username, text: msg });
   });
 };
