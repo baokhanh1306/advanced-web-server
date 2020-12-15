@@ -20,21 +20,18 @@ module.exports = function (io, socket) {
     io.emit('updateUsers', users);
     console.log(users);
   });
-  socket.on('create-board',  (name) => {
+  socket.on('create-board', async (name) => {
     const id = uuidv4();
-    boards.push({ id, name, playerX: socket.user });
+    boards.push({ id, name, playerX: socket.username });
     socket.board = id;
-    socket.join(socket.board);
-    const ids = await io.of("/").in(socket.board).allSockets();
-    console.log(ids);
-    console.log(socket.board);
+    socket.join(id);
   });
   socket.on('join-board', async (id) => {
     socket.board = id;
     socket.join(id);
   });
-  socket.on('send-message', ({ msg }) => {
+  socket.on('send-message', ({ username, msg }) => {
     console.log(msg);
-    io.to(socket.board).emit('message', { user: socket.username, text: msg });
+    io.to(socket.board).emit('message', { user: username, text: msg });
   });
 };
