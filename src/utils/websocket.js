@@ -1,10 +1,9 @@
-const Board = require('../board/board.model');
-const ErrorHandler = require('../middlewares/ErrorHandler');
+const { v4: uuidv4 } = require('uuid');
 let boards = [];
 let users = [];
 
 module.exports = function (io, socket) {
-  console.log('Socket connected ...');
+  console.log('New user connected');
   socket.on('disconnect', () => {
     users = users.filter((user) => user.socketId !== socket.id);
     console.log('Socket disconnected ...');
@@ -19,25 +18,20 @@ module.exports = function (io, socket) {
     socket.user = userId;
     socket.username = username;
     io.emit('updateUsers', users);
+    console.log(users);
   });
-  socket.on('create-board', async ({ name }) => {
-    const board = new Board({
-      name,
-      playerX: socket.user
-    });
-    await board.save();
-    boards.push(board);
-    socket.board = board._id;
-    socket.join(socket.board);
+  socket.on('create-board', async (name) => {
+    const id = uuidv4();
+    boards.push({ id, name, playerX: socket.username });
+    socket.board = id;
+    socket.join(id);
   });
-  socket.on('join-board', async ({ boardId }) => {
-    const board = await Board.findById(boardId, { winner: 0 });
-    if (board) {
-      socket.board = boardId;
-      socket.join(boardId);
-    }
+  socket.on('join-board', async (id) => {
+    socket.board = id;
+    socket.join(id);
   });
-  socket.on('send-message', ({ msg }) => {
-    io.to(socket.board).emit('message', { user: socket.username, text: msg });
+  socket.on('send-message', ({ username, msg }) => {
+    console.log(msg);
+    io.to(socket.board).emit('message', { user: username, text: msg });
   });
 };
