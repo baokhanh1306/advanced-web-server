@@ -49,4 +49,7 @@ module.exports = function (io, socket) {
       createdAt: Date.now()
     });
   });
+  socket.on('play-at', ({ row, col }) => {
+    io.to(socket.board).emit('move', { row,col });
+  });
 };
