@@ -17,6 +17,6 @@ exports.saveBoard = catchAsync(async (req, res, next) => {
 });
 
 exports.getBoard = catchAsync(async (_req, res, _next) => {
-  const boards = await Board.find({ winner: 0 });
+  const boards = await Board.find({ winner: 0 }).sort({ createdAt: -1 });
   res.json({ msg: 'Get boards successfully', data: boards });
 });

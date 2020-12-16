@@ -43,6 +43,7 @@ module.exports = function (io, socket) {
   });
   socket.on('send-message', ({ username, msg }) => {
     console.log(msg);
+    console.log(socket.username);
     io.to(socket.board).emit('message', {
       user: username,
       text: msg,
@@ -50,6 +51,7 @@ module.exports = function (io, socket) {
     });
   });
   socket.on('play-at', ({ row, col }) => {
-    io.to(socket.board).emit('move', { row,col });
+    console.log(row, col);
+    io.to(socket.board).emit('move', { row, col });
   });
 };
