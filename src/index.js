@@ -39,7 +39,7 @@ const io = socketIO(server, {
     origin: '*',
   }
 });
-io.on('connection', (socket) => require('./utils/websocket')(io,socket));
+io.on('connection', (socket) => require('./utils/websocket')(io, socket));
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () =>
