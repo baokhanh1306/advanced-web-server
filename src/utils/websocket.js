@@ -56,8 +56,8 @@ module.exports = function (io, socket) {
       createdAt: Date.now()
     });
   });
-  socket.on('play-at', ({ row, col }) => {
-    console.log(row, col);
-    io.to(socket.board).emit('move', { row, col });
+  socket.on('play-at', ({ row, col, val }) => {
+    console.log(row, col, val);
+    io.to(socket.board).emit('move', { row, col, val });
   });
 };
