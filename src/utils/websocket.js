@@ -39,29 +39,16 @@ module.exports = function (io, socket) {
     console.log('join', user);
     if (board) {
       const { playerX, playerO } = board
-      // if(player)
       if (playerX) {
-        size++;
-        await Board.updateOne({ _id: boardId }, { $set: { playerO: user } })
-      } else {
-        size++;
-        await Board.updateOne({ _id: boardId }, { $set: { playerX: user } })
+        await Board.updateOne({ _id: boardId }, { $set: { playerO: user } });
       }
-      if (size === 0) {
-        await Board.updateOne({ _id: boardId }, { $set: { playerX: user } })
+      else if (playerO) {
+        await Board.updateOne({ _id: boardId }, { $set: { playerX: user } });
       }
 
-      // if (size < 2) {
-      //   if (!playerX && playerO && playerO.toString() !== user) {
-      //     console.log('if1');
-      //     await Board.updateOne({ _id: boardId }, { $set: { playerX: user } })
-      //   } else if (!playerO && playerX && playerX.toString() !== user) {
-      //     console.log('if2');
-      //     await Board.updateOne({ _id: boardId }, { $set: { playerO: user } })
-      //   }
-      // }
       if (playerX) size++;
       else if (playerX && playerO) size++;
+
       socket.board = boardId;
       socket.join(boardId);
       io.to(socket.board).emit('user-join-room', { user, size });
