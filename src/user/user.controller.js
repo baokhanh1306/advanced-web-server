@@ -21,6 +21,15 @@ exports.login = catchAsync(async (req, res, next) => {
   res.json({ token, email: user.email });
 });
 
+exports.getById = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  const user = await User.findById(id).select('-password')
+  if (!user) {
+    throw new ErrorHandler(404, 'User not found');
+  }
+  res.status(200).json({ data: user, msg: 'Get user successfully' })
+})
+
 exports.getUser = (req, res, next) => {
   res.json({ ...req.user });
 };

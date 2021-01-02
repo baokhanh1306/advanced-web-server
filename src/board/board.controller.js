@@ -20,3 +20,8 @@ exports.getBoard = catchAsync(async (_req, res, _next) => {
   const boards = await Board.find({ winner: 0 }).sort({ createdAt: -1 });
   res.json({ msg: 'Get boards successfully', data: boards });
 });
+
+exports.getBoardById = catchAsync(async (req, res, _next) => {
+  const board = await Board.findById(req.params.id);
+  res.json({ msg: 'Get board successfully', data: board });
+});
