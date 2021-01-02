@@ -39,12 +39,16 @@ module.exports = function (io, socket) {
     console.log('join', user);
     if (board) {
       const { playerX, playerO } = board
-      if (playerX) size++;
-      if (player0) size++;
-       // if (user.toString() === playerX.toString()) { }
-      if (!playerO && user.toString() !== playerX.toString()) {
-        await Board.updateOne({ _id: boardId }, { $set: { playerO: user } })
+      if (playerX){
+        await Board.updateOne({ _id: boardId }, { $set: { playerO: user } });
+      } 
+      else if (playerO) {
+        await Board.updateOne({ _id: boardId }, { $set: { playerX: user } });
       }
+
+      if (playerX) size++;
+      else if (playerX && playerO) size++;
+
       socket.board = boardId;
       socket.join(boardId);
       io.to(socket.board).emit('user-join-room', { user, size });
@@ -54,10 +58,10 @@ module.exports = function (io, socket) {
     const board = await Board.findById(boardId);
     if (board) {
       const { playerX, playerO } = board;
-      if (user.toString() === playerX.toString()) {
+      if (playerX && user.toString() === playerX.toString()) {
         await Board.updateOne({ _id: boardId }, { $set: { playerX: null }});
       }
-      if (user.toString() === playerO.toString()) {
+      if (playerO && user.toString() === playerO.toString()) {
         await Board.updateOne({ _id: boardId }, { $set: { playerO: null }});
       }
     }
