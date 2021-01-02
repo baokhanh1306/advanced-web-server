@@ -1,6 +1,12 @@
 const { v4: uuidv4 } = require('uuid');
+const _ = require('lodash');
 const Board = require('../board/board.model');
 let boards = [];
+
+(async function () {
+  boards = await Board.find({})
+})()
+
 let users = [];
 
 module.exports = function (io, socket) {
@@ -33,38 +39,45 @@ module.exports = function (io, socket) {
     socket.join(newBoard._id);
     socket.emit('board-id', newBoard._id);
   });
-  socket.on('join-board',({ boardId, user }) => {
+  socket.on('join-board', ({ boardId, user }) => {
     let size = 0;
-    const board = boards.find(b => b.id === boardId);
-    console.log('join', user);
+    console.log(boardId, boards)
+    const board = _.find(boards, b => b._id.toString() === boardId)
+    console.log(board);
+    console.log('USER JOIN', user);
     if (board) {
       const { playerX, playerO } = board
-      if (playerX){
+      if (playerX) {
+        console.log('if1');
         board.playerO = user;
-      } 
+      }
       else if (playerO) {
+        console.log('if2');
+
         board.playerX = user;
       }
       if (!playerX && !playerO) {
+        console.log('if3');
+
         board.playerX = user;
       }
-
-      if (playerX) size++;
-      else if (playerX && playerO) size++;
+      if (board.playerX || board.playerO) size = 1;
+      if (board.playerX && board.playerO) size = 2;
 
       socket.board = boardId;
       socket.join(boardId);
+      console.log('cc', socket.board);
       io.to(socket.board).emit('user-join-room', { board, user, size });
     }
   });
-  socket.on('leave-board', async({ boardId, user }) => {
-    const board = boards.find(boardId);
+  socket.on('leave-board', async ({ boardId, user }) => {
+    const board = _.find(boards, b => b._id.toString() === boardId)
     if (board) {
       const { playerX, playerO } = board;
-      if (playerX && user.toString() === playerX.toString()) {
+      if (playerX && user === playerX.toString()) {
         board.playerX = null;
       }
-      if (playerO && user.toString() === playerO.toString()) {
+      if (playerO && user === playerO.toString()) {
         board.playerO = null;
       }
     }
