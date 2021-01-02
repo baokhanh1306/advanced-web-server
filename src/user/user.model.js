@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema(
     role: {
       type: Boolean,
       default: false
+    },
+    confirmed: {
+      type: Boolean,
+      default: false
     }
   },
   { timestamps: true }
@@ -53,6 +57,9 @@ userSchema.statics.findByCredentials = async function (email, password) {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     throw new ErrorHandler(400, 'Invalid login credentials');
+  }
+  if (!user.confirmed) {
+    throw new ErrorHandler(400, 'Please confirm your email');
   }
   return user;
 };

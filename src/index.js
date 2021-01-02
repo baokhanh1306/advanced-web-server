@@ -5,6 +5,7 @@ const cors = require('cors');
 const chalk = require('chalk');
 const http = require('http');
 const socketIO = require('socket.io');
+require('./middlewares/passport');
 
 const db = require('./services/db');
 const { handleError } = require('./middlewares/ErrorHandler');
