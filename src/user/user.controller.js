@@ -2,6 +2,10 @@ const catchAsync = require('../middlewares/catchAsync');
 const { ErrorHandler } = require('../middlewares/ErrorHandler');
 const User = require('./user.model');
 const nodemailer = require('nodemailer');
+const { errorMonitor } = require('nodemailer/lib/mailer');
+
+const URL = process.env.NODE_ENV !== prod ? 'http://localhost:4000' : 'https://polar-river-87898.herokuapp.com';
+const CLIENT_URL = process.env.NODE_ENV !== prod ? 'http://localhost:3000' : 'https://final-client.netlify.app';
 
 exports.register = catchAsync(async (req, res, next) => {
   const foundUser = await User.findOne({ email: req.body.email });
@@ -12,7 +16,7 @@ exports.register = catchAsync(async (req, res, next) => {
   await user.save();
 
   //confirm email
-  const link = `http://localhost:4000/api/users/confirmation/${user._id}`;
+  const link = `${URL}/api/users/confirmation/${user._id}`;
   const smtpTransport = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -48,7 +52,7 @@ exports.resetPassword = catchAsync(async (req,res,next) => {
   if (!user) {
     throw new ErrorHandler(400, 'Invalid user');
   }
-  const link = `http://localhost:3000/users/${email}`;
+  const link = `${CLIENT_URL}/users/${email}`;
   const smtpTransport = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -66,10 +70,13 @@ exports.resetPassword = catchAsync(async (req,res,next) => {
 });
 
 exports.changePassword = catchAsync(async (req,res,next) => {
-  const { email, password } = req.body;
+  const { email, password, confirmedPassword } = req.body;
   const user = await User.findOne({email});
   if (!user) {
     throw new ErrorHandler(400, 'Invalid user');
+  }
+  if (password !== confirmedPassword) {
+    throw new ErrorHandler(400, 'Confirmed password did not match');
   }
   user.password = password;
   await user.save();
@@ -95,5 +102,5 @@ exports.getById = catchAsync(async (req, res, next) => {
 });
 
 exports.getUser = (req, res, next) => {
-  res.json({ ...req.user });
+  res.json(req.user);
 };

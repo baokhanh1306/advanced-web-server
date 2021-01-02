@@ -20,32 +20,48 @@ module.exports = function (io, socket) {
     socket.username = username;
     io.emit('updateUsers', users);
   });
-  socket.on('create-board', async ({ name, user }) => {
+  socket.on('create-board', async ({ name, user, password = '' }) => {
     // const id = uuidv4();
     const newBoard = await Board.create({ name, playerX: user });
     boards.push({
       id: newBoard._id,
       name: newBoard.name,
-      playerX: user
+      playerX: user,
+      password
     });
     socket.board = newBoard._id;
     socket.join(newBoard._id);
     socket.emit('board-id', newBoard._id);
   });
   socket.on('join-board', async ({ boardId, user }) => {
+    let size = 0;
     const board = await Board.findById(boardId, { winner: 0 });
     console.log('join', user);
     if (board) {
       const { playerX, playerO } = board
-      // if (user.toString() === playerX.toString()) { }
+      if (playerX) size++;
+      if (player0) size++;
+       // if (user.toString() === playerX.toString()) { }
       if (!playerO && user.toString() !== playerX.toString()) {
-        console.log("HELO");
         await Board.updateOne({ _id: boardId }, { $set: { playerO: user } })
       }
-      socket.emit('user-join-chat', `${socket.username} has join the chat`);
       socket.board = boardId;
       socket.join(boardId);
+      io.to(socket.board).emit('user-join-room', { user, size });
     }
+  });
+  socket.on('leave-board', async({ boardId, user }) => {
+    const board = await Board.findById(boardId);
+    if (board) {
+      const { playerX, playerO } = board;
+      if (user.toString() === playerX.toString()) {
+        await Board.updateOne({ _id: boardId }, { $set: { playerX: null }});
+      }
+      if (user.toString() === playerO.toString()) {
+        await Board.updateOne({ _id: boardId }, { $set: { playerO: null }});
+      }
+    }
+    io.to(boardId).emit('user-leave-room', { msg: `User ${user} has left`});
   });
   socket.on('send-message', ({ username, msg }) => {
     console.log(msg);

@@ -32,7 +32,11 @@ const boardSchema = new mongoose.Schema({
         default: 0,
     },
     history: [String],
-    conversation: [conversationSchema],  
+    conversation: [conversationSchema],
+    password : {
+        type: String,
+        default: '',
+    }  
 }, { timestamps: true });
 
 const Board = new mongoose.model('Board', boardSchema);
