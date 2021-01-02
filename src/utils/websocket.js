@@ -36,16 +36,25 @@ module.exports = function (io, socket) {
   socket.on('join-board', async ({ boardId, user }) => {
     let size = 0;
     const board = await Board.findById(boardId, { winner: 0 });
-    console.log('join', user);
+
     if (board) {
       const { playerX, playerO } = board
-      if (playerX) {
+      if (!playerX && !playerO) {
+        console.log('2 thang null');
+        await Board.updateOne({ _id: boardId }, { $set: { playerX: user } });
+      }
+      if (playerX && !playerO) {
+        console.log('X joined');
         await Board.updateOne({ _id: boardId }, { $set: { playerO: user } });
       }
-      else if (playerO) {
+      else {
+        console.log('O joined');
         await Board.updateOne({ _id: boardId }, { $set: { playerX: user } });
       }
 
+      // if (size === 0) {
+      //   await Board.updateOne({ _id: boardId }, { $set: { playerX: user } })
+      // }
       if (playerX) size++;
       else if (playerX && playerO) size++;
 
@@ -58,6 +67,7 @@ module.exports = function (io, socket) {
     const board = await Board.findById(boardId);
     if (board) {
       const { playerX, playerO } = board;
+      console.log(user);
       if (playerX && user.toString() === playerX.toString()) {
         await Board.updateOne({ _id: boardId }, { $set: { playerX: null } });
       }
