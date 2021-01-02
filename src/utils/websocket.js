@@ -39,29 +39,46 @@ module.exports = function (io, socket) {
     console.log('join', user);
     if (board) {
       const { playerX, playerO } = board
-      if (playerX) size++;
-      if (player0) size++;
-       // if (user.toString() === playerX.toString()) { }
-      if (!playerO && user.toString() !== playerX.toString()) {
+      // if(player)
+      if (playerX) {
+        size++;
         await Board.updateOne({ _id: boardId }, { $set: { playerO: user } })
+      } else {
+        size++;
+        await Board.updateOne({ _id: boardId }, { $set: { playerX: user } })
       }
+      if (size === 0) {
+        await Board.updateOne({ _id: boardId }, { $set: { playerX: user } })
+      }
+
+      // if (size < 2) {
+      //   if (!playerX && playerO && playerO.toString() !== user) {
+      //     console.log('if1');
+      //     await Board.updateOne({ _id: boardId }, { $set: { playerX: user } })
+      //   } else if (!playerO && playerX && playerX.toString() !== user) {
+      //     console.log('if2');
+      //     await Board.updateOne({ _id: boardId }, { $set: { playerO: user } })
+      //   }
+      // }
+      if (playerX) size++;
+      else if (playerX && playerO) size++;
       socket.board = boardId;
       socket.join(boardId);
       io.to(socket.board).emit('user-join-room', { user, size });
     }
   });
-  socket.on('leave-board', async({ boardId, user }) => {
+  socket.on('leave-board', async ({ boardId, user }) => {
     const board = await Board.findById(boardId);
     if (board) {
       const { playerX, playerO } = board;
-      if (user.toString() === playerX.toString()) {
-        await Board.updateOne({ _id: boardId }, { $set: { playerX: null }});
+      if (playerX && user.toString() === playerX.toString()) {
+        await Board.updateOne({ _id: boardId }, { $set: { playerX: null } });
       }
-      if (user.toString() === playerO.toString()) {
-        await Board.updateOne({ _id: boardId }, { $set: { playerO: null }});
+      if (playerO && user.toString() === playerO.toString()) {
+        await Board.updateOne({ _id: boardId }, { $set: { playerO: null } });
       }
     }
-    io.to(boardId).emit('user-leave-room', { msg: `User ${user} has left`});
+    io.to(boardId).emit('user-leave-room', { msg: `User ${user} has left` });
   });
   socket.on('send-message', ({ username, msg }) => {
     console.log(msg);

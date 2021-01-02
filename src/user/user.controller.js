@@ -4,8 +4,8 @@ const User = require('./user.model');
 const nodemailer = require('nodemailer');
 const { errorMonitor } = require('nodemailer/lib/mailer');
 
-const URL = process.env.NODE_ENV !== prod ? 'http://localhost:4000' : 'https://polar-river-87898.herokuapp.com';
-const CLIENT_URL = process.env.NODE_ENV !== prod ? 'http://localhost:3000' : 'https://final-client.netlify.app';
+const URL = process.env.NODE_ENV !== 'prod' ? 'http://localhost:4000' : 'https://polar-river-87898.herokuapp.com';
+const CLIENT_URL = process.env.NODE_ENV !== 'prod' ? 'http://localhost:3000' : 'https://final-client.netlify.app';
 
 exports.register = catchAsync(async (req, res, next) => {
   const foundUser = await User.findOne({ email: req.body.email });
@@ -34,7 +34,7 @@ exports.register = catchAsync(async (req, res, next) => {
   res.status(201).json({ msg: 'Register successfully' });
 });
 
-exports.confirmEmail = catchAsync(async (req,res,next) => {
+exports.confirmEmail = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const user = await User.findById(id);
   if (user) {
@@ -43,12 +43,12 @@ exports.confirmEmail = catchAsync(async (req,res,next) => {
       await user.save();
     }
   }
-  res.status(200).json({ msg: 'Confirm successfully'});
+  res.status(200).json({ msg: 'Confirm successfully' });
 });
 
-exports.resetPassword = catchAsync(async (req,res,next) => {
+exports.resetPassword = catchAsync(async (req, res, next) => {
   const { email } = req.body;
-  const user = await User.findOne({email});
+  const user = await User.findOne({ email });
   if (!user) {
     throw new ErrorHandler(400, 'Invalid user');
   }
@@ -66,12 +66,12 @@ exports.resetPassword = catchAsync(async (req,res,next) => {
     html: `Hello,<br> Please Follow the link to reset your password.<br>${link}`
   };
   await smtpTransport.sendMail(mailOptions);
-  res.json({ msg: 'Email has been sent'});
+  res.json({ msg: 'Email has been sent' });
 });
 
-exports.changePassword = catchAsync(async (req,res,next) => {
+exports.changePassword = catchAsync(async (req, res, next) => {
   const { email, password, confirmedPassword } = req.body;
-  const user = await User.findOne({email});
+  const user = await User.findOne({ email });
   if (!user) {
     throw new ErrorHandler(400, 'Invalid user');
   }
@@ -80,7 +80,7 @@ exports.changePassword = catchAsync(async (req,res,next) => {
   }
   user.password = password;
   await user.save();
-  res.json({ msg: 'Change password successfully'});
+  res.json({ msg: 'Change password successfully' });
 });
 
 exports.login = catchAsync(async (req, res, next) => {
