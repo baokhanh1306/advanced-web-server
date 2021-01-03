@@ -4,8 +4,8 @@ const User = require('./user.model');
 const nodemailer = require('nodemailer');
 const { errorMonitor } = require('nodemailer/lib/mailer');
 
-const URL = process.env.NODE_ENV !== prod ? 'http://localhost:4000' : 'https://polar-river-87898.herokuapp.com';
-const CLIENT_URL = process.env.NODE_ENV !== prod ? 'http://localhost:3000' : 'https://final-client.netlify.app';
+const URL = process.env.NODE_ENV !== 'prod' ? 'http://localhost:4000' : 'https://polar-river-87898.herokuapp.com';
+const CLIENT_URL = process.env.NODE_ENV !== 'prod' ? 'http://localhost:3000' : 'https://final-client.netlify.app';
 
 exports.register = catchAsync(async (req, res, next) => {
   const foundUser = await User.findOne({ email: req.body.email });
