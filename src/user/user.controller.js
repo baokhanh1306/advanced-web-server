@@ -34,7 +34,7 @@ exports.register = catchAsync(async (req, res, next) => {
   res.status(201).json({ msg: 'Register successfully' });
 });
 
-exports.confirmEmail = catchAsync(async (req,res,next) => {
+exports.confirmEmail = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const user = await User.findById(id);
   if (user) {
@@ -43,16 +43,17 @@ exports.confirmEmail = catchAsync(async (req,res,next) => {
       await user.save();
     }
   }
-  res.status(200).json({ msg: 'Confirm successfully'});
+  res.status(200).json({ msg: 'Confirm successfully' });
 });
 
-exports.resetPassword = catchAsync(async (req,res,next) => {
+exports.resetPassword = catchAsync(async (req, res, next) => {
   const { email } = req.body;
-  const user = await User.findOne({email});
+  const user = await User.findOne({ email });
+  console.log(user)
   if (!user) {
-    throw new ErrorHandler(400, 'Invalid user');
+    throw new ErrorHandler(400, 'Email does not exist');
   }
-  const link = `${CLIENT_URL}/users/${email}`;
+  const link = `${CLIENT_URL}/reset-password/${email}`;
   const smtpTransport = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -66,12 +67,12 @@ exports.resetPassword = catchAsync(async (req,res,next) => {
     html: `Hello,<br> Please Follow the link to reset your password.<br>${link}`
   };
   await smtpTransport.sendMail(mailOptions);
-  res.json({ msg: 'Email has been sent'});
+  res.json({ msg: 'Email has been sent' });
 });
 
-exports.changePassword = catchAsync(async (req,res,next) => {
+exports.changePassword = catchAsync(async (req, res, next) => {
   const { email, password, confirmedPassword } = req.body;
-  const user = await User.findOne({email});
+  const user = await User.findOne({ email });
   if (!user) {
     throw new ErrorHandler(400, 'Invalid user');
   }
@@ -80,7 +81,7 @@ exports.changePassword = catchAsync(async (req,res,next) => {
   }
   user.password = password;
   await user.save();
-  res.json({ msg: 'Change password successfully'});
+  res.json({ msg: 'Change password successfully' });
 });
 
 exports.login = catchAsync(async (req, res, next) => {

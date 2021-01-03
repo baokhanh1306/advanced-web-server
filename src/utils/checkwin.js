@@ -17,47 +17,47 @@ module.exports = function (row, col, val, history) {
   }
 
   //check Top left to Bottom right diagonal
-  if (checkLeftSizeDiagonal(row,col,val,history)) return true;
+  if (checkLeftSizeDiagonal(row, col, val, history)) return true;
   //check Top right to Bottom left diagonal
-  if (checkRightSizeDiagonal(row,col,val,history)) return true;
+  if (checkRightSizeDiagonal(row, col, val, history)) return true;
 
   return false;
 };
 
 function checkLeftSizeDiagonal(row, col, val, history) {
   let topLeftRow = 0;
-  let topLeftCol = 0;  
+  let topLeftCol = 0;
   for (let i = row, j = col; i >= 0 && j >= 0; i--, j--) {
-      if (i === 0 || j === 0) {
-          topLeftRow = i;
-          topLeftCol = j;
-      }
+    if (i === 0 || j === 0) {
+      topLeftRow = i;
+      topLeftCol = j;
+    }
   }
   for (let i = topLeftRow, j = topLeftCol; i <= 15 && j <= 15; i++, j++) {
-      let count = 0;
-      for (let k = 0; k < 5; k++) {
-          if (history[i+k][j+k] === val) count++;
-      }
-      if (count === 5) return true;
+    let count = 0;
+    for (let k = 0; k < 5; k++) {
+      if (history[i + k][j + k] === val) count++;
+    }
+    if (count === 5) return true;
   }
   return false;
 }
 
-function checkRightSizeDiagonal(row,col,val,history) {
-    let topRightRow = 0;
-    let topRightCol = 0;
-    for (let i = row, j = col; i>=0 && j < 20; i--, j++) {
-        if (i === 0 || j === 19) {
-            topRightRow = i;
-            topRightCol = j;
-        }
+function checkRightSizeDiagonal(row, col, val, history) {
+  let topRightRow = 0;
+  let topRightCol = 0;
+  for (let i = row, j = col; i >= 0 && j < 20; i--, j++) {
+    if (i === 0 || j === 19) {
+      topRightRow = i;
+      topRightCol = j;
     }
-    for (let i = topRightRow, j = topRightCol; i <= 15 && j >= 4; i++, j--) {
-        let count = 0;  
-        for (let k = 0; k < 5; k++) {
-            if (history[i+k][j-k] === val) count++;
-        }
-        if (count === 5) return true;
+  }
+  for (let i = topRightRow, j = topRightCol; i <= 15 && j >= 4; i++, j--) {
+    let count = 0;
+    for (let k = 0; k < 5; k++) {
+      if (history[i + k][j - k] === val) count++;
     }
-    return false;
+    if (count === 5) return true;
+  }
+  return false;
 }

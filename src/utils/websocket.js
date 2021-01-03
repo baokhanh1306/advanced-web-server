@@ -2,11 +2,27 @@ const { v4: uuidv4 } = require('uuid');
 const _ = require('lodash');
 const checkWin = require('./checkwin');
 const Board = require('../board/board.model');
+const chalk = require('chalk');
 let boards = [];
+
+const genHist = () => {
+  return _.map(Array(BOARD_SIZE).fill(null), () => {
+    return Array(BOARD_SIZE).fill(null)
+  })
+}
+
+const BOARD_SIZE = 20;
 
 (async function () {
   boards = await Board.find({})
-  boards.map(board => ({ ...board, history: Array(20).fill(null).map(() => Array(20).fill(null))}));
+
+  boards = _.map(boards, b => {
+    return {
+      grid: JSON.parse(JSON.stringify(genHist())),
+      ...b.toObject()
+    }
+  })
+  console.log(boards);
 })()
 
 let users = [];
@@ -18,11 +34,12 @@ module.exports = function (io, socket) {
     console.log('Socket disconnected ...');
     io.emit('updateUsers', users);
   });
-  socket.on('identity', ({ id: userId, username }) => {
+  socket.on('identity', ({ id: userId, username, _id }) => {
     users.push({
       socketId: socket.id,
       userId,
-      username
+      username,
+      _id
     });
     socket.user = userId;
     socket.username = username;
@@ -87,8 +104,7 @@ module.exports = function (io, socket) {
     io.to(boardId).emit('user-leave-room', { board });
   });
   socket.on('send-message', ({ username, msg }) => {
-    console.log(msg);
-    console.log(socket.username);
+    console.log(chalk.greenBright(`send-message: ${msg}`));
     io.to(socket.board).emit('message', {
       user: username,
       text: msg,
@@ -96,13 +112,12 @@ module.exports = function (io, socket) {
     });
   });
   socket.on('play-at', ({ row, col, val }) => {
-    console.log(row, col, val);
-    const board = _.find(boards, b => b._id === socket.board.toString());
-    board.history[row][col] = val;
-    if (checkWin(row,col,val,board.history)) {
-      io.to(socket.board).emit('win', { msg: 'Ok win'});
+    console.log(chalk('play-at'), { row, col, val });
+    const board = _.find(boards, b => b._id.toString() === socket.board.toString());
+    board.grid[row][col] = val;
+    if (checkWin(row, col, val, board.grid)) {
+      io.to(socket.board).emit('win', { msg: 'Ok win' });
     }
-    console.log(board);
     io.to(socket.board).emit('move', { row, col, val });
   });
 };
