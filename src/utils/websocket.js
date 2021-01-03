@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const _ = require('lodash');
 const Board = require('../board/board.model');
+const chalk = require('chalk');
 let boards = [];
 
 (async function () {
@@ -16,11 +17,12 @@ module.exports = function (io, socket) {
     console.log('Socket disconnected ...');
     io.emit('updateUsers', users);
   });
-  socket.on('identity', ({ id: userId, username }) => {
+  socket.on('identity', ({ id: userId, username, _id }) => {
     users.push({
       socketId: socket.id,
       userId,
-      username
+      username,
+      _id
     });
     socket.user = userId;
     socket.username = username;
@@ -84,8 +86,7 @@ module.exports = function (io, socket) {
     io.to(boardId).emit('user-leave-room', { board });
   });
   socket.on('send-message', ({ username, msg }) => {
-    console.log(msg);
-    console.log(socket.username);
+    console.log(chalk.greenBright(`send-message: ${msg}`));
     io.to(socket.board).emit('message', {
       user: username,
       text: msg,
@@ -93,7 +94,8 @@ module.exports = function (io, socket) {
     });
   });
   socket.on('play-at', ({ row, col, val }) => {
-    console.log(row, col, val);
+
+    console.log(chalk('play-at'), { row, col, val });
     io.to(socket.board).emit('move', { row, col, val });
   });
 };
