@@ -1,10 +1,12 @@
 const { v4: uuidv4 } = require('uuid');
 const _ = require('lodash');
+const checkWin = require('./checkwin');
 const Board = require('../board/board.model');
 let boards = [];
 
 (async function () {
   boards = await Board.find({})
+  boards.map(board => ({ ...board, history: Array(20).fill(null).map(() => Array(20).fill(null))}));
 })()
 
 let users = [];
@@ -30,10 +32,11 @@ module.exports = function (io, socket) {
     // const id = uuidv4();
     const newBoard = await Board.create({ name, playerX: user });
     boards.push({
-      id: newBoard._id,
+      _id: newBoard._id,
       name: newBoard.name,
       playerX: user,
-      password
+      password,
+      history: Array(20).fill(null).map(() => Array(20).fill(null)),
     });
     socket.board = newBoard._id;
     socket.join(newBoard._id);
@@ -94,6 +97,12 @@ module.exports = function (io, socket) {
   });
   socket.on('play-at', ({ row, col, val }) => {
     console.log(row, col, val);
+    const board = _.find(boards, b => b._id === socket.board.toString());
+    board.history[row][col] = val;
+    if (checkWin(row,col,val,board.history)) {
+      io.to(socket.board).emit('win', { msg: 'Ok win'});
+    }
+    console.log(board);
     io.to(socket.board).emit('move', { row, col, val });
   });
 };
