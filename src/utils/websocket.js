@@ -3,6 +3,7 @@ const _ = require('lodash');
 const checkWin = require('./checkwin');
 const Board = require('../board/board.model');
 const chalk = require('chalk');
+const { emit } = require('nodemon');
 let boards = [];
 
 const genHist = () => {
@@ -22,7 +23,6 @@ const BOARD_SIZE = 20;
       ...b.toObject()
     };
   });
-  console.log(boards);
 })();
 
 let users = [];
@@ -57,26 +57,24 @@ module.exports = function (io, socket) {
     });
     socket.board = newBoard._id;
     socket.join(newBoard._id);
-    io.to(socket.board).emit('user-join-room', { newBoard, user, size });
+    io.to(socket.board).emit('user-join-room', { board: newBoard });
   });
   socket.on('join-board', ({ boardId, user, password }) => {
     let size = 0;
     const board = _.find(boards, (b) => b._id.toString() === boardId);
     if (password === board.password || board.password === '') {
-      console.log(board);
-      console.log('USER JOIN', user);
       if (board) {
         const { playerX, playerO } = board;
         if (playerX) {
-          console.log('if1');
+
           board.playerO = user;
         } else if (playerO) {
-          console.log('if2');
+
 
           board.playerX = user;
         }
         if (!playerX && !playerO) {
-          console.log('if3');
+
 
           board.playerX = user;
         }
@@ -122,13 +120,59 @@ module.exports = function (io, socket) {
     }
     io.to(socket.board).emit('move', { row, col, val });
   });
-  socket.on('join-room-id', ({ id, password }) => {
-    const board = boards[id];
-    if (password === board.password || board.password === '') {
+  socket.on('search-room-id', ({ roomId, user }) => {
+    const board = boards[parseInt(roomId)];
+    if (!board) socket.emit('room-not-found')
+    else {
+      if (board.password !== '') {
+        socket.emit('room-require-password', { board, roomId })
+      } else {
+        const { playerX, playerO } = board;
+        if (playerX) {
+
+          board.playerO = user;
+        } else if (playerO) {
+
+
+          board.playerX = user;
+        }
+        if (!playerX && !playerO) {
+
+
+          board.playerX = user;
+        }
+        if (board.playerX || board.playerO) size = 1;
+        if (board.playerX && board.playerO) size = 2;
+        socket.board = board._id;
+        socket.join(board._id);
+        io.to(socket.board).emit('user-join-room-id', { board });
+      }
+    }
+  })
+  socket.on('join-room-id-password', ({ id, password, user }) => {
+    const board = boards[parseInt(id)];
+    if (password === board.password) {
+      console.log(board);
+      const { playerX, playerO } = board;
+      if (playerX) {
+
+        board.playerO = user;
+      } else if (playerO) {
+
+
+        board.playerX = user;
+      }
+      if (!playerX && !playerO) {
+
+
+        board.playerX = user;
+      }
+      if (board.playerX || board.playerO) size = 1;
+      if (board.playerX && board.playerO) size = 2;
       socket.board = board._id;
       socket.join(board._id);
 
-      io.to(socket.board).emit('user-join-room-id', board);
+      io.to(socket.board).emit('user-join-room-id', { board });
     }
   });
 };
