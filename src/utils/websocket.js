@@ -39,8 +39,7 @@ module.exports = function (io, socket) {
       socketId: socket.id,
       userId,
       username,
-      _id,
-      grid: JSON.parse(JSON.stringify(genHist()))
+      _id
     });
     socket.user = userId;
     socket.username = username;
@@ -53,7 +52,8 @@ module.exports = function (io, socket) {
       _id: newBoard._id,
       name: newBoard.name,
       playerX: user,
-      password
+      password,
+      grid: JSON.parse(JSON.stringify(genHist()))
     });
     socket.board = newBoard._id;
     socket.join(newBoard._id);
@@ -66,16 +66,11 @@ module.exports = function (io, socket) {
       if (board) {
         const { playerX, playerO } = board;
         if (playerX) {
-
           board.playerO = user;
         } else if (playerO) {
-
-
           board.playerX = user;
         }
         if (!playerX && !playerO) {
-
-
           board.playerX = user;
         }
         if (board.playerX || board.playerO) size = 1;
@@ -122,23 +117,18 @@ module.exports = function (io, socket) {
   });
   socket.on('search-room-id', ({ roomId, user }) => {
     const board = boards[parseInt(roomId)];
-    if (!board) socket.emit('room-not-found')
+    if (!board) socket.emit('room-not-found');
     else {
       if (board.password !== '') {
-        socket.emit('room-require-password', { board, roomId })
+        socket.emit('room-require-password', { board, roomId });
       } else {
         const { playerX, playerO } = board;
         if (playerX) {
-
           board.playerO = user;
         } else if (playerO) {
-
-
           board.playerX = user;
         }
         if (!playerX && !playerO) {
-
-
           board.playerX = user;
         }
         if (board.playerX || board.playerO) size = 1;
@@ -148,23 +138,18 @@ module.exports = function (io, socket) {
         io.to(socket.board).emit('user-join-room-id', { board });
       }
     }
-  })
+  });
   socket.on('join-room-id-password', ({ id, password, user }) => {
     const board = boards[parseInt(id)];
     if (password === board.password) {
       console.log(board);
       const { playerX, playerO } = board;
       if (playerX) {
-
         board.playerO = user;
       } else if (playerO) {
-
-
         board.playerX = user;
       }
       if (!playerX && !playerO) {
-
-
         board.playerX = user;
       }
       if (board.playerX || board.playerO) size = 1;
