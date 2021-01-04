@@ -28,7 +28,24 @@ const userSchema = new mongoose.Schema(
     confirmed: {
       type: Boolean,
       default: false
-    }
+    },
+    cups: {
+      type: Number,
+      default: 0
+    },
+    games: {
+      type: Number,
+      default: 0
+    },
+    gamesWon: {
+      type: Number,
+      default: 0
+    },
+    winningPercent: {
+      type: Number,
+      default: 0
+    },
+    history: [{ type: mongoose.Types.ObjectId, ref: 'Board' }]
   },
   { timestamps: true }
 );
