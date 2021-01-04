@@ -59,69 +59,27 @@ module.exports = function (io, socket) {
     socket.join(newBoard._id);
     io.to(socket.board).emit('user-join-room', { board: newBoard });
   });
-<<<<<<< HEAD
-  socket.on('join-board', async ({ boardId, user }) => {
+  socket.on('join-board', ({ boardId, user }) => {
     let size = 0;
-    const board = await Board.findById(boardId, { winner: 0 });
-
+    const board = _.find(boards, (b) => b._id.toString() === boardId);
+    // if (password === board.password || board.password === '') {
     if (board) {
-      const { playerX, playerO } = board
+      const { playerX, playerO } = board;
+      if (playerX) {
+        board.playerO = user;
+      } else if (playerO) {
+        board.playerX = user;
+      }
       if (!playerX && !playerO) {
-        console.log('2 thang null');
-        await Board.updateOne({ _id: boardId }, { $set: { playerX: user } });
+        board.playerX = user;
       }
-      if (playerX && !playerO) {
-        console.log('X joined');
-        await Board.updateOne({ _id: boardId }, { $set: { playerO: user } });
-      }
-      else {
-        console.log('O joined');
-        await Board.updateOne({ _id: boardId }, { $set: { playerX: user } });
-      }
-
-      // if (size === 0) {
-      //   await Board.updateOne({ _id: boardId }, { $set: { playerX: user } })
-      // }
-      if (playerX) size++;
-      else if (playerX && playerO) size++;
+      if (board.playerX || board.playerO) size = 1;
+      if (board.playerX && board.playerO) size = 2;
 
       socket.board = boardId;
       socket.join(boardId);
-      io.to(socket.board).emit('user-join-room', { user, size });
-    }
-  });
-  socket.on('leave-board', async ({ boardId, user }) => {
-    const board = await Board.findById(boardId);
-    if (board) {
-      const { playerX, playerO } = board;
-      console.log(user);
-      if (playerX && user.toString() === playerX.toString()) {
-        await Board.updateOne({ _id: boardId }, { $set: { playerX: null } });
-      }
-      if (playerO && user.toString() === playerO.toString()) {
-        await Board.updateOne({ _id: boardId }, { $set: { playerO: null } });
-=======
-  socket.on('join-board', ({ boardId, user, password }) => {
-    let size = 0;
-    const board = _.find(boards, (b) => b._id.toString() === boardId);
-    if (password === board.password || board.password === '') {
-      if (board) {
-        const { playerX, playerO } = board;
-        if (playerX) {
-          board.playerO = user;
-        } else if (playerO) {
-          board.playerX = user;
-        }
-        if (!playerX && !playerO) {
-          board.playerX = user;
-        }
-        if (board.playerX || board.playerO) size = 1;
-        if (board.playerX && board.playerO) size = 2;
-
-        socket.board = boardId;
-        socket.join(boardId);
-        io.to(socket.board).emit('user-join-room', { board, user, size });
-      }
+      io.to(socket.board).emit('user-join-room', { board, user, size });
+      // }
     }
   });
   socket.on('leave-board', async ({ boardId, user }) => {
@@ -133,7 +91,6 @@ module.exports = function (io, socket) {
       }
       if (playerO && user === playerO.toString()) {
         board.playerO = null;
->>>>>>> 97a7fa2a7a29adf6fa31994de4d370e4d43f68d8
       }
     }
     io.to(boardId).emit('user-leave-room', { msg: `User ${user} has left` });
@@ -154,32 +111,51 @@ module.exports = function (io, socket) {
     );
     board.grid[row][col] = val;
     if (checkWin(row, col, val, board.grid)) {
-      io.to(socket.board).emit('win', { msg: 'Ok win' });
+      io.to(socket.board).emit('win', { winner: val, grid: board.grid });
     }
     io.to(socket.board).emit('move', { row, col, val });
   });
   socket.on('search-room-id', ({ roomId, user }) => {
+    // const board = boards[parseInt(roomId)];
+    // if (!board) socket.emit('room-not-found');
+    // else {
+    //   if (board.password !== '') {
+    //     socket.emit('room-require-password', { board, roomId });
+    //   } else {
+    //     const { playerX, playerO } = board;
+    //     if (playerX) {
+    //       board.playerO = user;
+    //     } else if (playerO) {
+    //       board.playerX = user;
+    //     }
+    //     if (!playerX && !playerO) {
+    //       board.playerX = user;
+    //     }
+    //     if (board.playerX || board.playerO) size = 1;
+    //     if (board.playerX && board.playerO) size = 2;
+    //     socket.board = board._id;
+    //     socket.join(board._id);
+    //     io.to(socket.board).emit('user-join-room-id', { board });
+    //   }
+    // }
     const board = boards[parseInt(roomId)];
     if (!board) socket.emit('room-not-found');
     else {
-      if (board.password !== '') {
-        socket.emit('room-require-password', { board, roomId });
-      } else {
-        const { playerX, playerO } = board;
-        if (playerX) {
-          board.playerO = user;
-        } else if (playerO) {
-          board.playerX = user;
-        }
-        if (!playerX && !playerO) {
-          board.playerX = user;
-        }
-        if (board.playerX || board.playerO) size = 1;
-        if (board.playerX && board.playerO) size = 2;
-        socket.board = board._id;
-        socket.join(board._id);
-        io.to(socket.board).emit('user-join-room-id', { board });
+      const { playerX, playerO } = board;
+      if (playerX) {
+        board.playerO = user;
+      } else if (playerO) {
+        board.playerX = user;
       }
+      if (!playerX && !playerO) {
+        board.playerX = user;
+      }
+      if (board.playerX || board.playerO) size = 1;
+      if (board.playerX && board.playerO) size = 2;
+      socket.board = board._id;
+      socket.join(board._id);
+      io.to(socket.board).emit('user-join-room', { board });
+
     }
   });
   socket.on('join-room-id-password', ({ id, password, user }) => {
@@ -207,22 +183,22 @@ module.exports = function (io, socket) {
     const board = boards[parseInt(boardId)];
     if (board) {
       const { playerX, playerO } = board;
-        if (playerX) {
-          board.playerO = user;
-        } else if (playerO) {
+      if (playerX) {
+        board.playerO = user;
+      } else if (playerO) {
 
-          board.playerX = user;
-        }
-        if (!playerX && !playerO) {
+        board.playerX = user;
+      }
+      if (!playerX && !playerO) {
 
-          board.playerX = user;
-        }
-        if (board.playerX || board.playerO) size = 1;
-        if (board.playerX && board.playerO) size = 2;
+        board.playerX = user;
+      }
+      if (board.playerX || board.playerO) size = 1;
+      if (board.playerX && board.playerO) size = 2;
 
-        socket.board = boardId;
-        socket.join(boardId);
-        io.to(socket.board).emit('user-join-room', { board, user, size });
+      socket.board = boardId;
+      socket.join(boardId);
+      io.to(socket.board).emit('user-join-room', { board, user, size });
     }
   });
 };
