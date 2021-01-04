@@ -3,9 +3,16 @@ const { ErrorHandler } = require('../middlewares/ErrorHandler');
 const User = require('./user.model');
 const nodemailer = require('nodemailer');
 const { errorMonitor } = require('nodemailer/lib/mailer');
+const Board = require('../board/board.model');
 
-const URL = process.env.NODE_ENV !== 'prod' ? 'http://localhost:4000' : 'https://polar-river-87898.herokuapp.com';
-const CLIENT_URL = process.env.NODE_ENV !== 'prod' ? 'http://localhost:3000' : 'https://final-client.netlify.app';
+const URL =
+  process.env.NODE_ENV !== 'prod'
+    ? 'http://localhost:4000'
+    : 'https://polar-river-87898.herokuapp.com';
+const CLIENT_URL =
+  process.env.NODE_ENV !== 'prod'
+    ? 'http://localhost:3000'
+    : 'https://final-client.netlify.app';
 
 exports.register = catchAsync(async (req, res, next) => {
   const foundUser = await User.findOne({ email: req.body.email });
@@ -49,10 +56,11 @@ exports.confirmEmail = catchAsync(async (req, res, next) => {
 exports.resetPassword = catchAsync(async (req, res, next) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
+  console.log(user);
   if (!user) {
-    throw new ErrorHandler(400, 'Invalid user');
+    throw new ErrorHandler(400, 'Email does not exist');
   }
-  const link = `${CLIENT_URL}/users/${email}`;
+  const link = `${CLIENT_URL}/reset-password/${email}`;
   const smtpTransport = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -99,6 +107,17 @@ exports.getById = catchAsync(async (req, res, next) => {
     throw new ErrorHandler(404, 'User not found');
   }
   res.status(200).json({ data: user, msg: 'Get user successfully' });
+});
+
+exports.getLeaderBoard = catchAsync(async (req, res, next) => {
+  const users = await User.find({}).sort({ cups: 'desc' });
+  res.json({ data: users, msg: 'Get leaderboard successfully' });
+});
+
+exports.getHistory = catchAsync(async (req, res, next) => {
+  const history = req.user.history;
+  const boards = await Board.find({ '_id': { $in: history } });
+  res.json({ data: boards, msg: 'Get user history successfully' });
 });
 
 exports.getUser = (req, res, next) => {
