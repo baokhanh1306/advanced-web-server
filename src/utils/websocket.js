@@ -160,4 +160,26 @@ module.exports = function (io, socket) {
       io.to(socket.board).emit('user-join-room-id', { board });
     }
   });
+  socket.on('invite', ({ userId, boardId }) => {
+    const board = boards[parseInt(boardId)];
+    if (board) {
+      const { playerX, playerO } = board;
+        if (playerX) {
+          board.playerO = user;
+        } else if (playerO) {
+
+          board.playerX = user;
+        }
+        if (!playerX && !playerO) {
+
+          board.playerX = user;
+        }
+        if (board.playerX || board.playerO) size = 1;
+        if (board.playerX && board.playerO) size = 2;
+
+        socket.board = boardId;
+        socket.join(boardId);
+        io.to(socket.board).emit('user-join-room', { board, user, size });
+    }
+  });
 };

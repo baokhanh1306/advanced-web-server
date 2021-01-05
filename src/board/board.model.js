@@ -1,16 +1,5 @@
 const mongoose = require('mongoose');
-
-const conversationSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-    },
-    text: {
-        type: String,
-        required: true,
-    }
-});
-
+const User = require('../user/user.model');
 
 const boardSchema = new mongoose.Schema({
     name: {
@@ -32,12 +21,50 @@ const boardSchema = new mongoose.Schema({
         default: 0,
     },
     history: [String],
-    conversation: [conversationSchema],
+    conversation: [{
+        name: String,
+        text: String
+    }],
     password : {
         type: String,
         default: '',
     }  
 }, { timestamps: true });
+
+
+boardSchema.pre('save', async function(next) {
+    const board = this;
+    if (board.isModified('winner')) {
+        const playerX = await User.findById(board.playerX);
+        const playerO = await User.findById(board.playerO);
+
+        playerX.games += 1;
+        playerO.games += 1;
+
+        playerX.history.push(board._id);
+        playerO.history.push(board._id);
+
+        //if playerX win
+        if (board.winner === -1) {
+            playerX.cups += 1;
+            playerX.gamesWon += 1;
+            playerX.winningPercent = playerX.gamesWon / playerX.games;
+            playerO.cups -= 1;
+            playerO.winningPercent = playerO.gamesWon / playerO.games;
+        }
+        else {
+            playerO.cups += 1;
+            playerO.gamesWon += 1;
+            playerO.winningPercent = playerO.gamesWon / playerO.games;
+            playerX.cups -= 1;
+            playerX.winningPercent = playerX.gamesWon / playerX.games;
+        }
+
+        await playerX.save();
+        await playerO.save();
+    }
+    next();
+});
 
 const Board = new mongoose.model('Board', boardSchema);
 
