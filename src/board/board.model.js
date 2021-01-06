@@ -44,19 +44,22 @@ boardSchema.pre('save', async function (next) {
     playerX.history.push(board._id);
     playerO.history.push(board._id);
 
+    let diffCups = Math.abs(playerX.cups - playerO.cups);
+    let bonusCups = diffCups <= 5 ? 1 : 5;
+
     //if playerX win
     if (board.winner === -1) {
-      playerX.cups += 1;
+      playerX.cups += bonusCups;
       playerX.gamesWon += 1;
       playerX.winningPercent = playerX.gamesWon / playerX.games;
-      playerO.cups -= 1;
+      playerO.cups -= bonusCups;
       playerO.winningPercent = playerO.gamesWon / playerO.games;
     }
     else {
-      playerO.cups += 1;
+      playerO.cups += bonusCups;
       playerO.gamesWon += 1;
       playerO.winningPercent = playerO.gamesWon / playerO.games;
-      playerX.cups -= 1;
+      playerX.cups -= bonusCups;
       playerX.winningPercent = playerX.gamesWon / playerX.games;
     }
 

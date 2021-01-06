@@ -54,7 +54,8 @@ module.exports = function (io, socket) {
       name: newBoard.name,
       playerX: user,
       password,
-      grid: JSON.parse(JSON.stringify(genHist()))
+      grid: JSON.parse(JSON.stringify(genHist())),
+      conversation: []
     });
     socket.board = newBoard._id;
     socket.join(newBoard._id);
@@ -99,6 +100,8 @@ module.exports = function (io, socket) {
   });
   socket.on('send-message', ({ username, msg }) => {
     console.log(chalk.greenBright(`send-message: ${msg}`));
+    const board = _.find(boards, b => b._id.toString() === socket.board.toString());
+    board.conversation = [...board.conversation, { name: username, text: msg}];
     io.to(socket.board).emit('message', {
       user: username,
       text: msg,
@@ -182,11 +185,11 @@ module.exports = function (io, socket) {
     io.to(user.socketId).emit('cancel-play-now');
   });
 
-  socket.on('play-now', async ({ userId, username, cups }) => {
+  socket.on('play-now', async ({ userId, cups }) => {
     let found = false;
     for (user of playNowUsers) {
       if (Math.abs(user.cups - cups) <= 5) {
-        const newBoard = await Board.create({ name: `${username} play now`, playerX: userId, password: '', playerO: user.userId });
+        const newBoard = await Board.create({ name: `${userId} play now`, playerX: userId, password: '', playerO: user.userId });
         boards.push({
           _id: newBoard._id,
           name: newBoard.name,
@@ -198,13 +201,16 @@ module.exports = function (io, socket) {
         socket.board = newBoard._id;
         socket.join(newBoard._id);
         io.to(socket.board).emit('user-join-room', { board: newBoard });
+        //emit to other user to join room
+        io.emit(`on-play-now-${user.userId}`, { data: newBoard._id });
+        found = true;
         break;
       }
     }
     if (!found) playNowUsers.push({
       socketId: socket.id,
-      username,
-      userId
+      userId,
+      cups
     });
   });
 };
