@@ -26,6 +26,7 @@ const BOARD_SIZE = 20;
 })();
 
 let users = [];
+let playNowUsers = [];
 
 module.exports = function (io, socket) {
   console.log('New user connected');
@@ -139,29 +140,17 @@ module.exports = function (io, socket) {
       }
     }
   });
-  socket.on('join-room-id-password', ({ id, password, user }) => {
-    const board = boards[parseInt(id)];
-    if (password === board.password) {
-      console.log(board);
-      const { playerX, playerO } = board;
-      if (playerX) {
-        board.playerO = user;
-      } else if (playerO) {
-        board.playerX = user;
+  socket.on('invite', ({ userId, boardId }) => {
+    const board = _.find(boards, (b) => b._id.toString() === boardId);
+    if (board) {
+      const user = users.find(u => u._id === userId);
+      if (user) {
+        io.to(user.socketId).emit('on-inviting', { data: boardId });
       }
-      if (!playerX && !playerO) {
-        board.playerX = user;
-      }
-      if (board.playerX || board.playerO) size = 1;
-      if (board.playerX && board.playerO) size = 2;
-      socket.board = board._id;
-      socket.join(board._id);
-
-      io.to(socket.board).emit('user-join-room-id', { board });
     }
   });
-  socket.on('invite', ({ userId, boardId }) => {
-    const board = boards[parseInt(boardId)];
+  socket.on('accept-invite', ({ user, boardId }) => {
+    const board = _.find(boards, (b) => b._id.toString() === boardId);
     if (board) {
       const { playerX, playerO } = board;
       if (playerX) {
@@ -180,4 +169,39 @@ module.exports = function (io, socket) {
       io.to(socket.board).emit('user-join-room', { board, user, size });
     }
   });
+  socket.on('deny-invite', ({ username, boardId }) => {
+    io.to(boardId).emit('deny-invite', { msg: `${username} has denied your invitation`});
+  });
+  
+  socket.on('cancel-play-now', ({ userId}) => {
+    playNowUsers = playNowUsers.filter(user => user.userId === userId);
+    const user = users.find(u => u._id === userId);
+    io.to(user.socketId).emit('cancel-play-now');
+  });
+
+  socket.on('play-now', async ({ userId,username, cups }) => {
+    let found = false;
+    for (user of playNowUsers) {
+      if (Math.abs(user.cups - cups) <= 5) {
+        const newBoard = await Board.create({ name: `${username} play now`, playerX: userId, password: '', playerO: user.userId });
+        boards.push({
+          _id: newBoard._id,
+          name: newBoard.name,
+          playerX: userId,
+          playerO: user.userId,
+          password: '',
+          grid: JSON.parse(JSON.stringify(genHist()))
+        });
+        socket.board = newBoard._id;
+        socket.join(newBoard._id);
+        io.to(socket.board).emit('user-join-room', { board: newBoard });
+        break; 
+      }
+    }
+    if (!found) playNowUsers.push({
+      socketId: socket.id,
+      username,
+      userId
+    });
+  }); 
 };
