@@ -114,9 +114,9 @@ exports.getLeaderBoard = catchAsync(async (req, res, next) => {
   res.json({ data: users, msg: 'Get leaderboard successfully' });
 });
 
-exports.getHistory = catchAsync(async (req,res,next) => {
+exports.getHistory = catchAsync(async (req, res, next) => {
   const history = req.user.history;
-  const boards = await Board.find({ '_id': { $in: history }});
+  const boards = await Board.find({ '_id': { $in: history } });
   res.json({ data: boards, msg: 'Get user history successfully' });
 });
 
