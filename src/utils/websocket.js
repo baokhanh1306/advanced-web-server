@@ -161,47 +161,28 @@ module.exports = function (io, socket) {
     }
   });
   socket.on('invite', ({ userId, boardId }) => {
+    console.log('ok')
     const board = _.find(boards, (b) => b._id.toString() === boardId);
     if (board) {
       const user = users.find(u => u._id === userId);
       if (user) {
-        io.to(user.socketId).emit('on-inviting', { data: boardId });
+        console.log(userId);
+        io.emit(`on-inviting-${userId}`, { data: boardId });
       }
     }
   });
-  socket.on('accept-invite', ({ user, boardId }) => {
-    const board = _.find(boards, (b) => b._id.toString() === boardId);
-    if (board) {
-      const { playerX, playerO } = board;
-      if (playerX) {
-        board.playerO = user;
-      } else if (playerO) {
 
-        board.playerX = user;
-      }
-      if (!playerX && !playerO) {
-
-        board.playerX = user;
-      }
-      if (board.playerX || board.playerO) size = 1;
-      if (board.playerX && board.playerO) size = 2;
-
-      socket.board = boardId;
-      socket.join(boardId);
-      io.to(socket.board).emit('user-join-room', { board, user, size });
-    }
-  });
   socket.on('deny-invite', ({ username, boardId }) => {
-    io.to(boardId).emit('deny-invite', { msg: `${username} has denied your invitation`});
+    io.to(boardId).emit('on-deny-invite', { msg: `${username} has denied your invitation` });
   });
-  
-  socket.on('cancel-play-now', ({ userId}) => {
+
+  socket.on('cancel-play-now', ({ userId }) => {
     playNowUsers = playNowUsers.filter(user => user.userId === userId);
     const user = users.find(u => u._id === userId);
     io.to(user.socketId).emit('cancel-play-now');
   });
 
-  socket.on('play-now', async ({ userId,username, cups }) => {
+  socket.on('play-now', async ({ userId, username, cups }) => {
     let found = false;
     for (user of playNowUsers) {
       if (Math.abs(user.cups - cups) <= 5) {
@@ -217,7 +198,7 @@ module.exports = function (io, socket) {
         socket.board = newBoard._id;
         socket.join(newBoard._id);
         io.to(socket.board).emit('user-join-room', { board: newBoard });
-        break; 
+        break;
       }
     }
     if (!found) playNowUsers.push({
@@ -225,5 +206,5 @@ module.exports = function (io, socket) {
       username,
       userId
     });
-  }); 
+  });
 };
