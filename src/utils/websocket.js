@@ -81,6 +81,7 @@ module.exports = function (io, socket) {
       io.to(socket.board).emit('user-join-room', { board, user, size });
       // }
     }
+    // }
   });
   socket.on('leave-board', async ({ boardId, user }) => {
     const board = _.find(boards, (b) => b._id.toString() === boardId);
