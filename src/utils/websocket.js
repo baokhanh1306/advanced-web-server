@@ -14,16 +14,16 @@ const genHist = () => {
 
 const BOARD_SIZE = 20;
 
-(async function () {
-  boards = await Board.find({});
+// (async function () {
+//   boards = await Board.find({});
 
-  boards = _.map(boards, (b) => {
-    return {
-      grid: JSON.parse(JSON.stringify(genHist())),
-      ...b.toObject()
-    };
-  });
-})();
+//   boards = _.map(boards, (b) => {
+//     return {
+//       grid: JSON.parse(JSON.stringify(genHist())),
+//       ...b.toObject()
+//     };
+//   });
+// })();
 
 let users = [];
 let playNowUsers = [];
@@ -46,41 +46,54 @@ module.exports = function (io, socket) {
     socket.username = username;
     io.emit('updateUsers', users);
   });
+  socket.on('get-list-board', () => {
+    socket.emit('list-board', ({ data: boards }))
+  })
   socket.on('create-board', async ({ name, user, password = '' }) => {
-    // const id = uuidv4();
-    const newBoard = await Board.create({ name, playerX: user, password });
-    boards.push({
-      _id: newBoard._id,
-      name: newBoard.name,
+    const id = uuidv4();
+    // const newBoard = await Board.create({ name, playerX: user, password });
+    const board = {
+      _id: id,
+      name,
       playerX: user,
       password,
       grid: JSON.parse(JSON.stringify(genHist())),
-      conversation: []
-    });
-    socket.board = newBoard._id;
-    socket.join(newBoard._id);
-    io.to(socket.board).emit('user-join-room', { board: newBoard });
+      conversation: [],
+      status: "1/2 players"
+    }
+    boards.push(board);
+    socket.board = id;
+    socket.join(id);
+    io.to(socket.board).emit('user-join-room', { board });
+    io.emit('list-board', ({ data: boards }))
   });
   socket.on('join-board', ({ boardId, user }) => {
-    let size = 0;
     const board = _.find(boards, (b) => b._id.toString() === boardId);
     // if (password === board.password || board.password === '') {
     if (board) {
       const { playerX, playerO } = board;
-      if (playerX) {
-        board.playerO = user;
-      } else if (playerO) {
-        board.playerX = user;
+      if (playerX && playerO) {
+        socket.board = boardId;
+        socket.join(boardId);
+        io.to(socket.board).emit('user-join-room', { board, user });
       }
-      if (!playerX && !playerO) {
-        board.playerX = user;
-      }
-      if (board.playerX || board.playerO) size = 1;
-      if (board.playerX && board.playerO) size = 2;
+      else {
+        if (playerX) {
+          board.playerO = user;
+        } else if (playerO) {
+          board.playerX = user;
+        }
+        if (!playerX && !playerO) {
+          board.playerX = user;
+        }
+        if (board.playerX || board.playerO) board.status = "1/2 players";
+        if (board.playerX && board.playerO) size = "2/2 players";
 
-      socket.board = boardId;
-      socket.join(boardId);
-      io.to(socket.board).emit('user-join-room', { board, user, size });
+        socket.board = boardId;
+        socket.join(boardId);
+        io.to(socket.board).emit('user-join-room', { board, user });
+        io.emit('list-board', ({ data: boards }))
+      }
       // }
     }
     // }
@@ -95,14 +108,18 @@ module.exports = function (io, socket) {
       if (playerO && user === playerO.toString()) {
         board.playerO = null;
       }
+      if (board.playerX || board.playerO) board.status = "1/2 players";
+      if (!board.playerX && !board.playerO) board.status = "0/2 players";
     }
     io.to(boardId).emit('user-leave-room', { msg: `User ${user} has left` });
+    io.emit('list-board', ({ data: boards }))
   });
   socket.on('send-message', ({ username, msg }) => {
     console.log(chalk.greenBright(`send-message: ${msg}`));
     const board = _.find(boards, b => b._id.toString() === socket.board.toString());
-    board.conversation = [...board.conversation, { name: username, text: msg }];
+    board.conversation = [...board.conversation, { user: username, value: msg, createdAt: Date.now(), type: 'text' }];
     io.to(socket.board).emit('message', {
+      type: 'text',
       user: username,
       text: msg,
       createdAt: Date.now()
