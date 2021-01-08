@@ -97,7 +97,7 @@ exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findByCredentials(email, password);
   const token = await user.generateToken();
 
-  res.json({ token, email: user.email });
+  res.json({ token, email: user.email, isAdmin: user.role });
 });
 
 exports.getById = catchAsync(async (req, res, next) => {
@@ -116,7 +116,7 @@ exports.getLeaderBoard = catchAsync(async (req, res, next) => {
 
 exports.getHistory = catchAsync(async (req, res, next) => {
   const history = req.user.history;
-  const boards = await Board.find({ '_id': { $in: history } });
+  const boards = await Board.find({ _id: { $in: history } });
   res.json({ data: boards, msg: 'Get user history successfully' });
 });
 

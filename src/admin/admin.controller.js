@@ -1,3 +1,4 @@
+const Board = require("../board/board.model");
 const catchAsync = require("../middlewares/catchAsync");
 const { ErrorHandler } = require("../middlewares/ErrorHandler");
 const User = require('../user/user.model');
@@ -7,7 +8,7 @@ exports.dashboard = catchAsync(async (req, res, next) => {
 });
 
 exports.userList = catchAsync(async (req,res,next) => {
-    const users = await User.find({});
+    const users = await User.find({ role: false }).select('username email cups games');
     res.json({ msg: 'User list',users});
 });
 
@@ -43,6 +44,13 @@ exports.ban = catchAsync(async (req,res,next) => {
     }
     await User.deleteOne({ _id: id});
     res.json({ msg: 'User has been deleted'});
+});
+
+exports.getBoards = catchAsync(async (req,res,next) => {
+    const boards = await Board.find({})
+    .populate('playerX')
+    .populate('playerO');
+    res.json({ msg: 'Board list',boards});
 });
 
 
