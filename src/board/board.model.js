@@ -49,17 +49,17 @@ boardSchema.pre('save', async function (next) {
 
     //if playerX win
     if (board.winner === -1) {
-      playerX.cups += bonusCups;
+      playerX.cups += playerX.cups >= playerO.cups ? 1 : bonusCups;
       playerX.gamesWon += 1;
       playerX.winningPercent = playerX.gamesWon / playerX.games;
-      playerO.cups -= bonusCups;
+      playerO.cups -= playerX.cups >= playerO.cups ? 1 : bonusCups;
       playerO.winningPercent = playerO.gamesWon / playerO.games;
     }
     else {
-      playerO.cups += bonusCups;
+      playerO.cups += playerO.cups >= playerX.cups ? 1 : bonusCups;
       playerO.gamesWon += 1;
       playerO.winningPercent = playerO.gamesWon / playerO.games;
-      playerX.cups -= bonusCups;
+      playerX.cups -= playerO.cups >= playerX.cups ? 1 : bonusCups;
       playerX.winningPercent = playerX.gamesWon / playerX.games;
     }
 

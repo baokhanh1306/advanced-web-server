@@ -3,17 +3,7 @@ const ErrorHandler = require('../middlewares/ErrorHandler');
 const Board = require('./board.model');
 
 exports.saveBoard = catchAsync(async (req, res, next) => {
-  const { id, winner, history, conversation, playerX, playerO } = req.body;
-  const board = await Board.findById(id);
-  if (!board) {
-    throw new ErrorHandler(400, 'Board not found');
-  }
-  board.playerO = playerO;
-  board.playerX = playerX;
-  board.winner = parseInt(winner);
-  board.history = history;
-  board.conversation = conversation;
-
+  const board = new Board(req.body);
   await board.save();
   res.json({ msg: 'Save board successfully', board });
 });
