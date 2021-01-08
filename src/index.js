@@ -12,7 +12,7 @@ const { handleError } = require('./middlewares/ErrorHandler');
 
 const app = express();
 
-db(process.env.DB_URI);
+db(process.env.DB_URI_LOCAL);
 
 if (process.env.NODE_ENV === 'production') {
   app.use(morgan('combined'));

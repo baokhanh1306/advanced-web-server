@@ -20,7 +20,7 @@ const boardSchema = new mongoose.Schema({
     enum: [-1, 0, 1],
     default: 0,
   },
-  history: String,
+  history: [String],
   conversation: [{
     name: String,
     text: String
