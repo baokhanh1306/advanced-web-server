@@ -47,7 +47,12 @@ module.exports = function (io, socket) {
       password,
       grid: JSON.parse(JSON.stringify(genHist())),
       conversation: [],
-      status: '1/2 players'
+      status: '1/2 players',
+      isReady: {
+        X: null,
+        O: null
+      },
+      history: []
     };
     boards.push(board);
     socket.board = id;
@@ -124,8 +129,13 @@ module.exports = function (io, socket) {
       (b) => b._id.toString() === socket.board.toString()
     );
     board.grid[row][col] = val;
+    board.history.push(JSON.stringify(board.grid));
     if (checkWin(row, col, val, board.grid)) {
-      io.to(socket.board).emit('win', { winner: val, grid: board.grid });
+      console.log("win");
+      board.winner = val === 'X' ? -1 : 1
+      io.to(socket.board).emit('win', { winner: val, grid: board.grid, board });
+      boards = _.filter(boards, b => b._id !== board._id)
+      io.emit('list-board', ({ data: boards }))
     }
     io.to(socket.board).emit('move', { row, col, val });
   });
@@ -149,7 +159,7 @@ module.exports = function (io, socket) {
       io.to(socket.board).emit('user-join-room', { board });
     }
   });
-  
+
   socket.on('invite', ({ userId, boardId }) => {
     console.log('ok');
     const board = _.find(boards, (b) => b._id.toString() === boardId);
@@ -170,6 +180,7 @@ module.exports = function (io, socket) {
 
   socket.on('play-now', async ({ userId, cups }) => {
     let found = false;
+    console.log(playNowUsers);
     for (user of playNowUsers) {
       if (Math.abs(user.cups - cups) <= 5 && user.userId !== userId) {
         const id = uuidv4();
@@ -178,17 +189,23 @@ module.exports = function (io, socket) {
           name: `Play Now`,
           password: '',
           grid: JSON.parse(JSON.stringify(genHist())),
+          playerX: userId,
           conversation: [],
-          status: '0/2 players'
+          status: '0/2 players',
+          isReady: {
+            X: null,
+            O: null
+          },
+          history: []
         };
         boards.push(board);
-        socket.board = newBoard._id;
-        socket.join(newBoard._id);
-        io.to(socket.board).emit('user-join-room', { board: newBoard });
+        socket.board = board._id;
+        socket.join(board._id);
+        io.to(socket.board).emit('user-join-room', { board });
         //emit to other user to join room
         playNowUsers = _.filter(playNowUsers, (u) => u.userId === user.userId);
-        io.emit(`on-play-now-${user.userId}`, { data: newBoard._id });
-        io.emit(`on-play-now-${userId}`, { data: newBoard._id });
+        io.emit(`on-play-now-${user.userId}`, { data: board._id });
+        io.emit(`on-play-now-${userId}`, { data: board._id });
         found = true;
         break;
       }
@@ -200,4 +217,15 @@ module.exports = function (io, socket) {
         cups
       });
   });
+
+  socket.on('game-ready', ({ boardId, userId }) => {
+    console.log('OK');
+    const board = _.find(boards, b => b._id === boardId)
+
+    if (userId === board.playerX) board.isReady.X = userId
+    if (userId === board.playerO) board.isReady.O = userId
+    if (board.isReady.X && board.isReady.O) {
+      io.to(boardId).emit('ready')
+    }
+  })
 };
