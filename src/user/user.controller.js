@@ -95,6 +95,12 @@ exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   const user = await User.findByCredentials(email, password);
+  if (!user.confirmed) {
+    throw new ErrorHandler(400, 'Please confirm your email');
+  }
+  if (user.banned) {
+    throw new ErrorHandler(400, 'Your user has been banned');
+  }
   const token = await user.generateToken();
 
   res.json({ token, email: user.email, isAdmin: user.role });
