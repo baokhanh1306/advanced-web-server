@@ -45,7 +45,11 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    history: [{ type: mongoose.Types.ObjectId, ref: 'Board' }]
+    banned: {
+      type: Boolean,
+      default: false,
+    },
+    history: [{ type: mongoose.Types.ObjectId, ref: 'Board' }],
   },
   { timestamps: true }
 );
@@ -74,9 +78,6 @@ userSchema.statics.findByCredentials = async function (email, password) {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
     throw new ErrorHandler(400, 'Invalid login credentials');
-  }
-  if (!user.confirmed) {
-    throw new ErrorHandler(400, 'Please confirm your email');
   }
   return user;
 };
