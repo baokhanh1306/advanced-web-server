@@ -22,13 +22,14 @@ const boardSchema = new mongoose.Schema({
   },
   history: [String],
   conversation: [{
-    name: String,
-    text: String
+    user: String,
+    value: String,
   }],
   password: {
     type: String,
     default: '',
-  }
+  },
+  uuid: String
 }, { timestamps: true });
 
 
@@ -62,6 +63,9 @@ boardSchema.pre('save', async function (next) {
       playerX.cups -= playerO.cups >= playerX.cups ? 1 : bonusCups;
       playerX.winningPercent = playerX.gamesWon / playerX.games;
     }
+
+    playerX.cups = playerX.cups < 0 ? 0 : playerX.cups
+    playerO.cups = playerO.cups < 0 ? 0 : playerO.cups
 
     await playerX.save();
     await playerO.save();
