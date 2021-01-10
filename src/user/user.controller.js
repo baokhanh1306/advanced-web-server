@@ -110,7 +110,7 @@ exports.getById = catchAsync(async (req, res, next) => {
 });
 
 exports.getLeaderBoard = catchAsync(async (req, res, next) => {
-  const users = await User.find({}).sort({ cups: 'desc' });
+  const users = await User.find({}).sort({ cups: 'desc' }).select('-password -tokens');
   res.json({ data: users, msg: 'Get leaderboard successfully' });
 });
 
