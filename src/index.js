@@ -46,8 +46,6 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () =>
   console.log(
     chalk.yellow(`
-${process.env.NODE_ENV} server
-
 ⚡️ ==> Visit server at ${process.env.HOST_URL}
 ⚡️ ==> Server is running on port ${PORT}
 `)
