@@ -8,7 +8,8 @@ const {
   changePassword,
   resetPassword,
   getLeaderBoard,
-  getHistory
+  getHistory,
+  google
 } = require('./user.controller');
 const passport = require('passport');
 
@@ -21,6 +22,7 @@ router.get(
 );
 router.post('/register', register);
 router.post('/login', login);
+router.post('/google', google)
 router.get('/confirmation/:id', confirmEmail);
 router.post('/reset', resetPassword);
 router.post('/changePassword', changePassword);

@@ -49,6 +49,9 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    googleId: String,
+    facebookId: String,
+    avatar: { type: String, default: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png' },
     history: [{ type: mongoose.Types.ObjectId, ref: 'Board' }],
   },
   { timestamps: true }

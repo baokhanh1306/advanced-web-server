@@ -41,6 +41,21 @@ exports.register = catchAsync(async (req, res, next) => {
   res.status(201).json({ msg: 'Register successfully' });
 });
 
+exports.google = catchAsync(async (req, res, next) => {
+  const { googleId } = req.body
+  const foundUser = await User.findOne({ googleId })
+  if (foundUser) {
+    const token = await foundUser.generateToken();
+    res.json({ token, email: foundUser.email, isAdmin: foundUser.role });
+  } else {
+    const user = new User(req.body);
+    user.confirmed = true
+    await user.save();
+    const token = await user.generateToken();
+    res.json({ token, email: user.email, isAdmin: user.role });
+  }
+})
+
 exports.confirmEmail = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const user = await User.findById(id);
