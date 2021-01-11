@@ -19,12 +19,12 @@ router.get(
   passport.authenticate('jwt', { session: false }),
   getHistory
 );
-router.get('/:id', getById);
 router.post('/register', register);
 router.post('/login', login);
 router.get('/confirmation/:id', confirmEmail);
 router.post('/reset', resetPassword);
 router.post('/changePassword', changePassword);
 router.get('/leaderboard', getLeaderBoard);
+router.get('/:id', getById);
 
 module.exports = router;

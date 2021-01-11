@@ -3,9 +3,12 @@ const ErrorHandler = require('../middlewares/ErrorHandler');
 const Board = require('./board.model');
 
 exports.saveBoard = catchAsync(async (req, res, next) => {
-  const board = new Board(req.body);
-  await board.save();
-  res.json({ msg: 'Save board successfully', board });
+  const foundBoard = await Board.findOne({ uuid: req.body.uuid })
+  if (!foundBoard) {
+    const board = new Board(req.body);
+    await board.save();
+  }
+  res.json({ msg: 'Save board successfully' });
 });
 
 exports.getBoard = catchAsync(async (_req, res, _next) => {
