@@ -4,6 +4,7 @@ const User = require('./user.model');
 const nodemailer = require('nodemailer');
 const { errorMonitor } = require('nodemailer/lib/mailer');
 const Board = require('../board/board.model');
+const { v4: uuidv4 } = require('uuid');
 
 const URL =
   process.env.NODE_ENV !== 'prod'
@@ -42,8 +43,8 @@ exports.register = catchAsync(async (req, res, next) => {
 });
 
 exports.google = catchAsync(async (req, res, next) => {
-  const { googleId } = req.body
-  const foundUser = await User.findOne({ googleId })
+  const { email } = req.body
+  const foundUser = await User.findOne({ email })
   if (foundUser) {
     const token = await foundUser.generateToken();
     res.json({ token, email: foundUser.email, isAdmin: foundUser.role });
@@ -71,11 +72,13 @@ exports.confirmEmail = catchAsync(async (req, res, next) => {
 exports.resetPassword = catchAsync(async (req, res, next) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
-  console.log(user);
+  const id = uuidv4();
   if (!user) {
     throw new ErrorHandler(400, 'Email does not exist');
   }
-  const link = `${CLIENT_URL}/reset-password/${email}`;
+  user.resetToken = id;
+  await user.save();
+  const link = `${CLIENT_URL}/reset-password/${id}`;
   const smtpTransport = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -93,10 +96,13 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 });
 
 exports.changePassword = catchAsync(async (req, res, next) => {
-  const { email, password, confirmedPassword } = req.body;
+  const { email, password, confirmedPassword, token } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
     throw new ErrorHandler(400, 'Invalid user');
+  }
+  if (user.resetToken !== token) {
+    throw new ErrorHandler(400, 'Invalid token')
   }
   if (password !== confirmedPassword) {
     throw new ErrorHandler(400, 'Confirmed password did not match');
