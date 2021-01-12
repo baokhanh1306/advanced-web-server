@@ -9,7 +9,8 @@ const {
   resetPassword,
   getLeaderBoard,
   getHistory,
-  google
+  google,
+  updateById
 } = require('./user.controller');
 const passport = require('passport');
 
@@ -26,6 +27,7 @@ router.post('/google', google)
 router.get('/confirmation/:id', confirmEmail);
 router.post('/reset', resetPassword);
 router.post('/changePassword', changePassword);
+router.post('/updateById', passport.authenticate('jwt', { session: false }), updateById);
 router.get('/leaderboard', getLeaderBoard);
 router.get('/:id', getById);
 
