@@ -29,12 +29,13 @@ exports.userList = catchAsync(async (req, res, next) => {
 });
 
 exports.getUser = catchAsync(async (req, res, next) => {
-  const { id } = req.body;
+  const { id } = req.params;
   const user = await User.findById(id).select('-password');
   if (!user) {
-    return res.json({ msg: 'User not found' });
+    throw new ErrorHandler(400, 'Invalid user');
   }
-  res.json({ msg: 'User detail', user });
+  const boards = await Board.find({ _id: { $in: user.history } }).populate('playerX').populate('playerO');
+  res.json({ msg: 'User detail', user, history: boards });
 });
 
 exports.ban = catchAsync(async (req, res, next) => {

@@ -1,6 +1,6 @@
 const express = require('express');
 const { isAdmin } = require('../middlewares/auth');
-const { dashboard, userList, getBoards, ban, unban } = require('./admin.controller');
+const { dashboard, userList, getBoards, ban, unban, getUser } = require('./admin.controller');
 const passport = require('passport');
 
 const router = express.Router();
@@ -13,5 +13,6 @@ router.get('/users', userList);
 router.get('/boards', getBoards);
 router.delete('/users/:id', ban);
 router.put('/users/:id', unban);
+router.get('/users/:id', getUser);
 
 module.exports = router;
