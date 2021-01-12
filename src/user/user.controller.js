@@ -144,7 +144,7 @@ exports.getLeaderBoard = catchAsync(async (req, res, next) => {
 
 exports.getHistory = catchAsync(async (req, res, next) => {
   const history = req.user.history;
-  const boards = await Board.find({ _id: { $in: history } }).sort({ createdAt: -1 });
+  const boards = await Board.find({ _id: { $in: history } }).populate('playerX playerO').sort({ createdAt: -1 });
   res.json({ data: boards, msg: 'Get user history successfully' });
 });
 
