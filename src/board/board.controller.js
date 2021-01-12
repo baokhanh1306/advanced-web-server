@@ -4,9 +4,11 @@ const Board = require('./board.model');
 
 exports.saveBoard = catchAsync(async (req, res, next) => {
   const foundBoard = await Board.findOne({ uuid: req.body.uuid })
+  console.log(foundBoard);
   if (!foundBoard) {
     const board = new Board(req.body);
     await board.save();
+    console.log(board);
   }
   res.json({ msg: 'Save board successfully' });
 });
