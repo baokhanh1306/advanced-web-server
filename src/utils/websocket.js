@@ -18,6 +18,7 @@ let boards = [];
 let users = [];
 let playNowUsers = [];
 let playingUsers = [];
+let reconnectingUsers = [];
 
 module.exports = function (io, socket) {
   console.log('New user connected');
@@ -36,6 +37,7 @@ module.exports = function (io, socket) {
     socket.user = userId;
     socket.username = username;
     io.emit('updateUsers', users);
+    io.emit('reconnecting-users', reconnectingUsers)
   });
   socket.on('get-list-board', () => {
     socket.emit('list-board', { data: boards });
@@ -96,23 +98,7 @@ module.exports = function (io, socket) {
   socket.on('surrender', async ({ boardId, user }) => {
     const board = _.find(boards, (b) => b._id.toString() === boardId);
     if (board) {
-      // board.currentUsers = _.filter(board.currentUsers, per => per !== user)
-      // if ((board.playerX && user === board.playerX.toString()) || (board.playerO && user === board.playerO.toString())) {
 
-      //   if (!board.isReady.X || !board.isReady.O) {
-      //     const { playerX, playerO } = board;
-      //     if (playerX && user === playerX.toString()) {
-      //       board.playerX = null;
-      //     }
-      //     if (playerO && user === playerO.toString()) {
-      //       board.playerO = null;
-      //     }
-      //     // if (board.playerX || board.playerO) board.status = '1/2 players';
-      //     // if (!board.playerX && !board.playerO) board.status = '0/2 players';
-      //     io.to(boardId).emit('user-leave-room', { msg: `User ${user} has left`, playingUsers });
-      //     io.emit('list-board', { data: boards });
-      //   }
-      // else {
       board.winner = user === board.playerX.toString() ? 1 : -1
       let val = board.winner === 1 ? 'O' : 'X'
       let loser = board.winner === 1 ? 'X' : 'O'
@@ -120,12 +106,9 @@ module.exports = function (io, socket) {
       io.to(socket.board).emit('surrender', { winner: val, loser, grid: board.grid, board });
       boards = _.filter(boards, b => b._id !== board._id)
       io.emit('list-board', ({ data: boards }))
-      // _id: uuid, grid, isReady, status, ...rest
       const { isReady, status, _id, grid, isXTurn, ...rest } = board
       const newBoard = new Board(rest)
       await newBoard.save()
-      // }
-      // }
     }
   });
   socket.on('send-message', ({ username, msg }) => {
@@ -282,5 +265,39 @@ module.exports = function (io, socket) {
     const { playerX, playerO } = board
     const otherUser = userId === playerX ? playerO : playerX
     io.emit(`cancel-draw-${otherUser}`)
+  })
+  socket.on('user-disconnect', ({ boardId, userId }) => {
+    const board = _.find(boards, b => b._id === boardId)
+    const { playerX, playerO } = board
+    const otherUser = userId === playerX ? playerO : playerX
+    if (!_.find(reconnectingUsers, (u) => { u.userId === userId })) {
+      reconnectingUsers.push({
+        userId,
+        boardId
+      })
+    }
+    io.emit(`opponent-disconnect-${otherUser}`)
+    io.emit('reconnecting-users', reconnectingUsers)
+  })
+
+  socket.on('set-win', async ({ boardId, userId }) => {
+    const board = _.find(boards, (b) => b._id.toString() === boardId);
+    if (board) {
+
+      board.winner = userId === board.playerX.toString() ? -1 : 1
+      let val = board.winner === 1 ? 'X' : 'O'
+      let loser = board.winner === 1 ? 'O' : 'X'
+
+      io.to(socket.board).emit('surrender', { winner: val, loser, grid: board.grid, board });
+      boards = _.filter(boards, b => b._id !== board._id)
+      io.emit('list-board', ({ data: boards }))
+      const { isReady, status, _id, grid, isXTurn, ...rest } = board
+      const newBoard = new Board(rest)
+      await newBoard.save()
+    }
+  })
+
+  socket.on('user-reconnect', ({ boardId, userid }) => {
+
   })
 };
