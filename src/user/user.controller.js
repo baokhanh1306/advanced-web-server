@@ -10,11 +10,11 @@ const filterParams = require('../utils/filterParams');
 const URL =
   process.env.NODE_ENV !== 'prod'
     ? 'http://localhost:4000'
-    : 'https://polar-river-87898.herokuapp.com';
+    : process.env.HOST_DEPLOY_URL;
 const CLIENT_URL =
   process.env.NODE_ENV !== 'prod'
     ? 'http://localhost:3000'
-    : 'https://final-client.netlify.app';
+    : process.env.CLIENT_DEPLOY_URL;
 
 exports.register = catchAsync(async (req, res, next) => {
   const foundUser = await User.findOne({ email: req.body.email });
