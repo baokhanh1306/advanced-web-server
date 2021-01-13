@@ -5,15 +5,16 @@ const nodemailer = require('nodemailer');
 const { errorMonitor } = require('nodemailer/lib/mailer');
 const Board = require('../board/board.model');
 const { v4: uuidv4 } = require('uuid');
+const filterParams = require('../utils/filterParams');
 
 const URL =
   process.env.NODE_ENV !== 'prod'
     ? 'http://localhost:4000'
-    : 'https://polar-river-87898.herokuapp.com';
+    : process.env.HOST_DEPLOY_URL;
 const CLIENT_URL =
   process.env.NODE_ENV !== 'prod'
     ? 'http://localhost:3000'
-    : 'https://final-client.netlify.app';
+    : process.env.CLIENT_DEPLOY_URL;
 
 exports.register = catchAsync(async (req, res, next) => {
   const foundUser = await User.findOne({ email: req.body.email });
@@ -143,8 +144,25 @@ exports.getLeaderBoard = catchAsync(async (req, res, next) => {
 
 exports.getHistory = catchAsync(async (req, res, next) => {
   const history = req.user.history;
-  const boards = await Board.find({ _id: { $in: history } });
+  const boards = await Board.find({ _id: { $in: history } }).populate('playerX playerO').sort({ createdAt: -1 });
   res.json({ data: boards, msg: 'Get user history successfully' });
+});
+
+exports.updateById = catchAsync(async (req, res, next) => {
+  const { _id, avatar, username } = req.body
+  const user = await User.findById(_id)
+  if (!user) {
+    throw new ErrorHandler(404, 'User not found');
+  }
+  const update = { $set: {} }
+  if (avatar) {
+    update.$set.avatar = avatar
+  }
+  if (username) {
+    update.$set.username = username
+  }
+  const updated = await User.findByIdAndUpdate(_id, update, { new: true }).select('-password -tokens')
+  res.json({ data: updated, msg: 'Update user successfully' })
 });
 
 exports.getUser = (req, res, next) => {
