@@ -7,14 +7,8 @@ const Board = require('../board/board.model');
 const { v4: uuidv4 } = require('uuid');
 const filterParams = require('../utils/filterParams');
 
-const URL =
-  process.env.NODE_ENV !== 'prod'
-    ? 'http://localhost:4000'
-    : process.env.HOST_DEPLOY_URL;
-const CLIENT_URL =
-  process.env.NODE_ENV !== 'prod'
-    ? 'http://localhost:3000'
-    : process.env.CLIENT_DEPLOY_URL;
+const URL = process.env.HOST_DEPLOY_URL;
+const CLIENT_URL =  process.env.CLIENT_DEPLOY_URL;
 
 exports.register = catchAsync(async (req, res, next) => {
   const foundUser = await User.findOne({ email: req.body.email });
