@@ -44,6 +44,7 @@ module.exports = function (io, socket) {
   });
   socket.on('create-board', async ({ name, user, moveDuration = 20, password = '' }) => {
     const id = uuidv4();
+    console.log('create')
     const board = {
       _id: id,
       name,
@@ -72,9 +73,11 @@ module.exports = function (io, socket) {
     const board = _.find(boards, (b) => b._id.toString() === boardId);
     // const otherBoard = _.filter(boards, b=>b._id !==boardId)
     // _.map(otherBoard, b=> )
+    console.log('join')
     if (board) {
       reconnectingUsers = _.filter(reconnectingUsers, r => r.userId !== user)
       const { playerX, playerO } = board;
+      // if (playerX !== user && playerO !== user) {
       if (!_.includes(board.currentUsers, user) && board.currentUsers.length < 2) {
         board.currentUsers.push(user)
       }
@@ -84,9 +87,9 @@ module.exports = function (io, socket) {
         socket.board = boardId;
         socket.join(boardId);
       } else {
-        if (playerX) {
+        if (playerX && playerX !== user) {
           board.playerO = user;
-        } else if (playerO) {
+        } else if (playerO && playerO !== user) {
           board.playerX = user;
         }
         if (!playerX && !playerO) {
@@ -98,6 +101,7 @@ module.exports = function (io, socket) {
       io.to(socket.board).emit('user-join-room', { board, user });
       io.emit('list-board', { data: boards });
     }
+
   });
   socket.on('surrender', async ({ boardId, user }) => {
     const board = _.find(boards, (b) => b._id.toString() === boardId);
@@ -247,7 +251,7 @@ module.exports = function (io, socket) {
     if (userId === board.playerX) board.isReady.X = userId
     if (userId === board.playerO) board.isReady.O = userId
     if (board.isReady.X && board.isReady.O) {
-      io.to(boardId).emit('ready')
+      io.to(boardId).emit('ready', { data: board });
       io.emit('list-board', ({ data: boards }))
     }
   })
@@ -277,20 +281,47 @@ module.exports = function (io, socket) {
     io.emit(`cancel-draw-${otherUser}`)
   })
   socket.on('user-disconnect', ({ boardId, userId }) => {
-    console.log('USER DISCONNECT FROM BOARD');
     const board = _.find(boards, b => b._id === boardId)
     if (board) {
+      const { playerX, playerO, isReady } = board
+      if (!isReady.X || !isReady.O) {
+        console.log('USER DISCONNECT FROM BOARD, GAME READY');
 
-      const { playerX, playerO } = board
-      const otherUser = userId === playerX ? playerO : playerX
-      if (!_.find(reconnectingUsers, (u) => { u.userId === userId })) {
-        reconnectingUsers.push({
-          userId,
-          boardId
-        })
+        if (board.currentUsers.length < 2) {
+          boards = _.filter(boards, b => b._id !== boardId);
+        }
+        else {
+          if (playerX === userId) {
+            board.playerX = null;
+          }
+          else if (playerO === userId) {
+            board.playerO = null;
+          }
+          board.currentUsers = _.filter(board.currentUsers, u => u !== userId);
+        }
+        io.emit('list-board', ({ data: boards }));
+      } else {
+        const userInRooms = _.filter(reconnectingUsers, u => u.boardId === boardId)
+        if (userInRooms.length) {
+          boards = _.filter(boards, b => b._id !== boardId);
+          reconnectingUsers = _.filter(reconnectingUsers, r => r.boardId !== boardId)
+          io.emit('reconnecting-users', reconnectingUsers)
+          io.emit('list-board', ({ data: boards }));
+        }
+        else {
+
+          const otherUser = userId === playerX ? playerO : playerX
+          if (!_.find(reconnectingUsers, (u) => { u.userId === userId })) {
+            reconnectingUsers.push({
+              userId,
+              boardId
+            })
+          }
+          io.emit(`opponent-disconnect-${otherUser}`)
+          io.emit('reconnecting-users', reconnectingUsers)
+        }
+
       }
-      io.emit(`opponent-disconnect-${otherUser}`)
-      io.emit('reconnecting-users', reconnectingUsers)
     }
 
   })
@@ -322,6 +353,7 @@ module.exports = function (io, socket) {
   })
 
   socket.on('leave-board-not-start', ({ boardId, userId }) => {
+    console.log('LEAVE NOT READY')
     const board = _.find(boards, (b) => b._id.toString() === boardId);
     if (board) {
       const { playerX, playerO } = board;
