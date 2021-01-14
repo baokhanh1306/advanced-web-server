@@ -19,9 +19,11 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.use(morgan('dev'));
-app.use(cors({
-  origin: '*'
-}));
+app.use(
+  cors({
+    origin: '*'
+  })
+);
 app.use(express.json());
 
 app.get('/', (_req, res) => {
@@ -37,7 +39,7 @@ app.use((err, req, res, next) => {
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: '*',
+    origin: '*'
   }
 });
 io.on('connection', (socket) => require('./utils/websocket')(io, socket));
