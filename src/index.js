@@ -12,16 +12,18 @@ const { handleError } = require('./middlewares/ErrorHandler');
 
 const app = express();
 
-db(process.env.DB_URI_LOCAL);
+db(process.env.DB_URI);
 
 if (process.env.NODE_ENV === 'production') {
   app.use(morgan('combined'));
 }
 
 app.use(morgan('dev'));
-app.use(cors({
-  origin: '*'
-}));
+app.use(
+  cors({
+    origin: '*'
+  })
+);
 app.use(express.json());
 
 app.get('/', (_req, res) => {
@@ -37,7 +39,7 @@ app.use((err, req, res, next) => {
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: '*',
+    origin: '*'
   }
 });
 io.on('connection', (socket) => require('./utils/websocket')(io, socket));
