@@ -27,7 +27,9 @@ exports.register = catchAsync(async (req, res, next) => {
   //confirm email
   const link = `${URL}/api/users/confirmation/${user._id}`;
   const smtpTransport = nodemailer.createTransport({
-    service: 'Gmail',
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
@@ -81,7 +83,9 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
   const link = `${CLIENT_URL}/reset-password/${id}`;
   const smtpTransport = nodemailer.createTransport({
-    service: 'Gmail',
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
